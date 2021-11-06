@@ -24,22 +24,25 @@ type Client struct {
 func GetClient() *Client {
 	clientSingleton.Do(func() {
 		config := GetConfig()
-		jar, _ := cookiejar.New(nil)
-		user := []*http.Cookie{
-			{Name: "COOKIE_LOGIN_USER", Value: config.Auth},
-		}
-		jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
-		jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
-		jar.SetCookies(&url.URL{Scheme: "https", Host: "api.cloud.189.cn"}, user)
-		jar.SetCookies(&url.URL{Scheme: "https", Host: "open.e.189.cn"}, []*http.Cookie{
-			{Name: "SSON", Value: config.SSON},
-		})
 		client = &Client{
 			config: config,
-			api:    &http.Client{Jar: jar},
+			api:    newClient(config.SSON, config.Auth),
 		}
 	})
 	return client
+}
+func newClient(sson, auth string) *http.Client {
+	jar, _ := cookiejar.New(nil)
+	user := []*http.Cookie{
+		{Name: "COOKIE_LOGIN_USER", Value: config.Auth},
+	}
+	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
+	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
+	jar.SetCookies(&url.URL{Scheme: "https", Host: "api.cloud.189.cn"}, user)
+	jar.SetCookies(&url.URL{Scheme: "https", Host: "open.e.189.cn"}, []*http.Cookie{
+		{Name: "SSON", Value: config.SSON},
+	})
+	return &http.Client{Jar: jar}
 }
 
 func (client *Client) refresh() {
@@ -57,6 +60,7 @@ func (client *Client) refresh() {
 			config.Auth = cookie.Value
 			config.SessionKey = getUserBriefInfo(*config).SessionKey
 			config.Save()
+			client.api = newClient(config.SSON, config.Auth)
 			return
 		}
 	}
@@ -106,6 +110,10 @@ func (client *Client) sesstionKey() string {
 		config.Save()
 	}
 	return config.SessionKey
+}
+
+type errorResp struct {
+	ErrorCode string `json:"errorCode,omitempty"`
 }
 
 type briefInfo struct {

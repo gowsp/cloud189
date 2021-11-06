@@ -32,4 +32,5 @@ func init() {
 	rootCmd.AddCommand(mkdirCmd)
 	rootCmd.AddCommand(mvCmd)
 	rootCmd.AddCommand(cpCmd)
+	rootCmd.AddCommand(webdavCmd)
 }

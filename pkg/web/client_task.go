@@ -3,6 +3,8 @@ package web
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/gowsp/cloud189-cli/pkg/file"
 )
 
 type taskType string
@@ -14,7 +16,7 @@ const (
 )
 
 func (client *Client) runTask(taskType taskType, paths ...string) {
-	CheckCloudPath(paths...)
+	file.CheckPath(paths...)
 	if taskType == DELETE {
 		files := client.finds(paths...)
 		client.createTask(taskType, "", files...)
@@ -33,7 +35,7 @@ type taskInfo struct {
 	IsFolder uint   `json:"isFolder,omitempty"`
 }
 
-func (client *Client) createTask(taskType taskType, targetFolderId string, files ...*CloudFile) {
+func (client *Client) createTask(taskType taskType, targetFolderId string, files ...*file.FileInfo) {
 	length := len(files)
 	if length == 0 {
 		return
@@ -47,7 +49,7 @@ func (client *Client) createTask(taskType taskType, targetFolderId string, files
 		if v.IsFolder {
 			isFolder = 1
 		}
-		rm[i] = taskInfo{Id: string(v.Id), Name: v.Name, IsFolder: uint(isFolder)}
+		rm[i] = taskInfo{Id: string(v.FileId), Name: v.Name(), IsFolder: uint(isFolder)}
 	}
 	data, _ := json.Marshal(rm)
 
@@ -57,4 +59,5 @@ func (client *Client) createTask(taskType taskType, targetFolderId string, files
 	params.Set("targetFolderId", targetFolderId)
 	req.URL.RawQuery = params.Encode()
 	client.api.Do(req)
+
 }

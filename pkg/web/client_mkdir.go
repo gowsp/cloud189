@@ -4,16 +4,18 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
+
+	"github.com/gowsp/cloud189-cli/pkg/file"
 )
 
-func (client *Client) Mkdir(clouds ...string) {
-	CheckCloudPath(clouds...)
-	client.initSesstion()
-	client.mkdir(Root.Id.String(), clouds...)
+func (client *Client) Mkdir(clouds ...string) error {
+	file.CheckPath(clouds...)
+	client.mkdir(file.Root.Id.String(), clouds...)
+	return nil
 }
 
 func (client *Client) findOrCreateDir(cloud string) folderResp {
-	resp := client.mkdir(Root.Id.String(), cloud)
+	resp := client.mkdir(file.Root.Id.String(), cloud)
 	target := resp[cloud[1:]]
 	if target.Success {
 		return target
@@ -43,8 +45,11 @@ func (client *Client) mkdir(parentId string, paths ...string) map[string]folderR
 	if err != nil {
 		log.Fatalln(err)
 	}
+	var errorResp errorResp
 	var result map[string]folderResp
-	json.NewDecoder(resp.Body).Decode(&result)
+	decoder := json.NewDecoder(resp.Body)
+	decoder.Decode(&result)
+	decoder.Decode(&errorResp)
 	defer resp.Body.Close()
 	return result
 }

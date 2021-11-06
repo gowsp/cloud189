@@ -19,16 +19,21 @@ func TestMkdir(t *testing.T) {
 	GetClient().Mkdir("/demo", "/demo/1/2", "/demo/1/3")
 }
 func TestUp(t *testing.T) {
-	GetClient().Upload("../../README.md", "../../LICENSE", "/demo/1/2")
+	GetClient().Up("/demo/1/2", "../../README.md", "../../LICENSE")
 }
 func TestLs(t *testing.T) {
-	GetClient().Ls("/demo/1")
+	GetClient().Ls("/demo/1/2")
+}
+func TestReadir(t *testing.T) {
+	client := GetClient()
+	data, _ := client.Stat("/demo/1/2")
+	client.Readdir(data.Id(), 0)
 }
 func TestDownFile(t *testing.T) {
-	GetClient().Download("d:/", "/demo/")
+	GetClient().Dl("d:/", "/demo/")
 }
 func TestDownDir(t *testing.T) {
-	GetClient().Download("d:/", "/demo/")
+	GetClient().Dl("d:/", "/demo/")
 }
 func TestCp(t *testing.T) {
 	GetClient().Cp("/demo/1/2", "/demo")
@@ -37,7 +42,7 @@ func TestMv(t *testing.T) {
 	GetClient().Mv("/demo/1/3", "/demo")
 }
 func TestRm(t *testing.T) {
-	GetClient().Rm("/demo/1", "/demo")
+	GetClient().Rm("/demo/1/2", "/demo")
 }
 
 func TestSign(t *testing.T) {

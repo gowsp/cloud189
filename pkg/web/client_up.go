@@ -10,11 +10,12 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gowsp/cloud189-cli/pkg"
+	"github.com/gowsp/cloud189-cli/pkg/file"
 	"github.com/gowsp/cloud189-cli/pkg/util"
 )
 
@@ -50,135 +51,154 @@ type uploadUrls struct {
 	RequestHeader string `json:"requestHeader,omitempty"`
 }
 
-const (
-	KB = 1 << 10
-	MB = 1 << 20
-
-	Slice = 10 * MB
-)
-
-func (client *Client) Upload(cloud string, locals ...string) {
-	CheckCloudPath(cloud)
-	client.initSesstion()
+func (client *Client) Up(cloud string, locals ...string) {
+	file.CheckPath(cloud)
 	dir := client.findOrCreateDir(cloud)
 	for _, local := range locals {
-		client.upload(dir.Id.String(), local)
+		i := file.NewLocalFile(dir.Id.String(), local, client)
+		i.Upload()
 	}
 }
-func (client *Client) upload(parentId, name string) {
-	i := NewUploadFile(name, Slice)
-	info := client.init(i, parentId)
-
-	fileId := info.UploadFileId
-	if fileId == "" {
-		log.Fatalln("error get upload fileid")
-	}
-	if info.FileDataExists == 1 {
-		log.Println("file exists, fast upload")
-		client.commit(i, fileId, "0")
-		return
-	}
-
-	var upload initResp
-	params := make(url.Values)
-	params.Set("uploadFileId", fileId)
-	client.sendRequest(func() *http.Request {
-		return client.createRequest("/person/getUploadedPartsInfo", params)
-	}, &upload)
-
-	info = client.check(i, fileId)
-	if info.FileDataExists == 1 {
-		log.Println("file exists, fast upload")
-		client.commit(i, fileId, "1")
-		return
-	}
-	client.copy(i, fileId)
-	client.commit(i, fileId, "1")
-}
-
-func (client *Client) init(i *UploadFile, parentId string) *uploadInfo {
+func (client *Client) init(i pkg.UploadFile, parentId string) *uploadInfo {
 	f := make(url.Values)
 	f.Set("parentFolderId", parentId)
-	f.Set("fileName", i.BaseName())
+	f.Set("fileName", i.Name())
 	f.Set("fileSize", strconv.FormatInt(i.Size(), 10))
-	f.Set("sliceSize", strconv.Itoa(Slice))
+	f.Set("sliceSize", strconv.Itoa(file.Slice))
 
-	a := i.SliceNum()
-	if a > 1 {
+	if i.SliceNum() > 1 {
 		f.Set("lazyCheck", "1")
 	} else {
 		f.Set("fileMd5", i.FileMD5())
 		f.Set("sliceMd5", i.SliceMD5())
 	}
 	var upload initResp
-	client.sendRequest(func() *http.Request {
+	client.uploadRequest(func() *http.Request {
 		return client.createRequest("/person/initMultiUpload", f)
 	}, &upload)
 	return &upload.Data
 }
 
-func (client *Client) check(i *UploadFile, fileId string) *uploadInfo {
+func (client *Client) check(i pkg.UploadFile, fileId string) *uploadInfo {
 	var upload initResp
 	params := make(url.Values)
 	params.Set("fileMd5", i.FileMD5())
 	params.Set("sliceMd5", i.SliceMD5())
 	params.Set("uploadFileId", fileId)
-	client.sendRequest(func() *http.Request {
+	client.uploadRequest(func() *http.Request {
 		return client.createRequest("/person/checkTransSecond", params)
 	}, &upload)
 	return &upload.Data
 }
 
-func (client *Client) copy(u *UploadFile, fileId string) {
-	name := u.FullName()
-	file, err := os.Open(name)
+func (client *Client) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
+	switch upload.Type() {
+	case "STREAM":
+		file := upload.(*file.StreamFile)
+		file.Prepare.Do(func() {
+			info := client.init(file, file.ParentId())
+
+			file.SetUploadId(info.UploadFileId)
+			if file.UploadId() == "" {
+				log.Fatalln("error get upload fileid")
+			}
+			file.Exists = info.FileDataExists == 1
+		})
+	case "LOCALFILE":
+		file := upload.(*file.LocalFile)
+		file.Prepare.Do(func() {
+			info := client.init(file, file.ParentId())
+
+			fileId := info.UploadFileId
+			file.SetUploadId(fileId)
+			if fileId == "" {
+				log.Fatalln("error get upload fileid")
+			}
+			if info.FileDataExists == 1 {
+				file.Exists = true
+				return
+			}
+			info = client.check(file, fileId)
+			if info.FileDataExists == 1 {
+				file.Exists = true
+				return
+			}
+		})
+	}
+	if upload.IsExists() {
+		log.Println("file exists, fast upload")
+		client.commit(upload, upload.UploadId(), "0")
+		return nil
+	}
+	err := client.UploadPart(part, upload.UploadId())
 	if err != nil {
-		log.Fatalf("open %v error %v", name, err)
+		return err
 	}
-	defer file.Close()
-
-	for i, part := range u.Parts() {
-		p := make(url.Values)
-		num := strconv.Itoa(i + 1)
-		p.Set("partInfo", fmt.Sprintf("%s-%s", num, part.Name))
-		p.Set("uploadFileId", fileId)
-
-		var urlResp urlResp
-		client.sendRequest(func() *http.Request {
-			return client.createRequest("/person/getMultiUploadUrls", p)
-		}, &urlResp)
-		log.Printf("start uploading part %s\n", num)
-
-		upload := urlResp.Data["partNumber_"+num]
-		s := io.NewSectionReader(file, part.Offset, u.SliceSize)
-		req, _ := http.NewRequest(http.MethodPut, upload.RequestURL, s)
-		headers := strings.Split(upload.RequestHeader, "&")
-		for _, v := range headers {
-			i := strings.Index(v, "=")
-			req.Header.Set(v[0:i], v[i+1:])
-		}
-		resp, _ := http.DefaultClient.Do(req)
-		if resp.StatusCode != 200 {
-			data, _ := io.ReadAll(resp.Body)
-			log.Fatalf("upload error, %s\n", string(data))
-		}
-		resp.Body.Close()
-		log.Printf("part %s upload completed\n", num)
+	if upload.IsComplete() {
+		client.commit(upload, upload.UploadId(), "1")
 	}
-	log.Println("file upload completed")
+	return nil
 }
-func (client *Client) commit(i *UploadFile, fileId, lazyCheck string) {
-	var upload initResp
+func (client *Client) UploadPart(part pkg.UploadPart, fileId string) error {
+	p := make(url.Values)
+	num := strconv.Itoa(part.Num() + 1)
+	p.Set("partInfo", fmt.Sprintf("%s-%s", num, part.Name()))
+	p.Set("uploadFileId", fileId)
+
+	var urlResp urlResp
+	client.uploadRequest(func() *http.Request {
+		return client.createRequest("/person/getMultiUploadUrls", p)
+	}, &urlResp)
+	log.Printf("start uploading part %s\n", num)
+
+	upload := urlResp.Data["partNumber_"+num]
+	req, _ := http.NewRequest(http.MethodPut, upload.RequestURL, part.Data())
+	headers := strings.Split(upload.RequestHeader, "&")
+	for _, v := range headers {
+		i := strings.Index(v, "=")
+		req.Header.Set(v[0:i], v[i+1:])
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	resp.Body.Close()
+	if resp.StatusCode != 200 {
+		data, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("upload error, %s", string(data))
+	}
+	log.Printf("part %s upload completed\n", num)
+	return nil
+}
+
+type UploadResult struct {
+	Code string       `json:"code,omitempty"`
+	File UploadDetail `json:"file,omitempty"`
+}
+type UploadDetail struct {
+	Id         string `json:"userFileId,omitempty"`
+	FileSize   int64  `json:"file_size,omitempty"`
+	FileName   string `json:"file_name,omitempty"`
+	FileMd5    string `json:"file_md_5,omitempty"`
+	CreateDate string `json:"create_date,omitempty"`
+}
+
+func (r *UploadResult) GetCode() string {
+	return r.Code
+}
+func (client *Client) commit(i pkg.UploadFile, fileId, lazyCheck string) UploadDetail {
+	var result UploadResult
 	params := make(url.Values)
 	params.Set("fileMd5", i.FileMD5())
 	params.Set("sliceMd5", i.SliceMD5())
 	params.Set("lazyCheck", lazyCheck)
 	params.Set("uploadFileId", fileId)
-	client.sendRequest(func() *http.Request {
+	client.uploadRequest(func() *http.Request {
 		return client.createRequest("/person/commitMultiUploadFile", params)
-	}, &upload)
+	}, &result)
+	return result.File
 }
-func (client *Client) sendRequest(req func() *http.Request, data uploadResp) {
+func (client *Client) uploadRequest(req func() *http.Request, data uploadResp) {
 	resp, err := client.api.Do(req())
 	if err != nil {
 		log.Fatalln(err)
@@ -191,9 +211,9 @@ func (client *Client) sendRequest(req func() *http.Request, data uploadResp) {
 		return
 	case "InvalidSessionKey":
 		client.refresh()
-		client.sendRequest(req, data)
+		client.uploadRequest(req, data)
 	case "InvalidSignature":
-		client.sendRequest(req, data)
+		client.uploadRequest(req, data)
 	default:
 		log.Fatalln(data.GetCode())
 	}

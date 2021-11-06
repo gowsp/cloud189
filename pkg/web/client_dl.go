@@ -9,11 +9,14 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"time"
+
+	"github.com/gowsp/cloud189-cli/pkg/file"
 )
 
 type folderInfo struct {
-	Path        []fileInfo `json:"path,omitempty"`
-	Data        []fileInfo `json:"data,omitempty"`
+	Path        []StatInfo `json:"path,omitempty"`
+	Data        []StatInfo `json:"data,omitempty"`
 	PageNum     int        `json:"pageNum,omitempty"`
 	PageSize    int        `json:"pageSize,omitempty"`
 	RecordCount int        `json:"recordCount,omitempty"`
@@ -21,34 +24,40 @@ type folderInfo struct {
 
 func (f *folderInfo) Name() string {
 	i := len(f.Path)
-	return f.Path[i-1].Name
+	return f.Path[i-1].Name()
 }
 
-type fileInfo struct {
+type StatInfo struct {
 	Id          json.Number `json:"fileId,omitempty"`
-	ParentId    json.Number `json:"parentId,omitempty"`
+	FileName    string      `json:"fileName,omitempty"`
+	FileSize    int64       `json:"fileSize,omitempty"`
 	IsFolder    bool        `json:"isFolder,omitempty"`
-	Name        string      `json:"fileName,omitempty"`
-	Size        int64       `json:"fileSize,omitempty"`
+	FileModTime int64       `json:"lastOpTime,omitempty"`
 	DownloadUrl string      `json:"downloadUrl,omitempty"`
 }
 
-func (f *fileInfo) getDownloadUrl() string {
+func (f *StatInfo) Name() string       { return f.FileName }
+func (f *StatInfo) Size() int64        { return f.FileSize }
+func (f *StatInfo) Mode() os.FileMode  { return 0666 }
+func (f *StatInfo) ModTime() time.Time { return time.UnixMilli(f.FileModTime) }
+func (f *StatInfo) IsDir() bool        { return f.IsFolder }
+func (f *StatInfo) Sys() interface{}   { return nil }
+func (f *StatInfo) getDownloadUrl() string {
 	return "https:" + f.DownloadUrl
 }
 
-func (c *Client) Download(local string, clouds ...string) {
-	CheckCloudPath(clouds...)
+func (c *Client) Dl(local string, clouds ...string) {
+	file.CheckPath(clouds...)
 	for _, cloud := range clouds {
-		file := c.find(cloud)
-		if file == nil {
+		file, err := c.Stat(cloud)
+		if err != nil {
 			log.Printf("%s not found, skip download\n", cloud)
 			continue
 		}
-		if file.IsFolder {
-			c.downByFolderId(file.Id.String(), local, 1)
+		if file.IsDir() {
+			c.downByFolderId(file.Id(), local, 1)
 		} else {
-			c.downByFileId(file.Id.String(), local)
+			c.Get(file.Id(), local)
 		}
 	}
 }
@@ -78,19 +87,19 @@ func (c *Client) downByFolderId(dir string, local string, pageNum int) {
 		c.downByFolderId(dir, local, pageNum+1)
 	}
 }
-func (client *Client) downByFileId(id, local string) {
+func (client *Client) Get(id, local string) error {
 	fileInfo, err := client.getFileInfo(id)
 	if err != nil {
-		log.Println(err)
-		return
+		return err
 	}
 	client.downFile(fileInfo, local)
+	return nil
 }
-func (client *Client) downFile(fileInfo *fileInfo, local string) {
+func (client *Client) downFile(fileInfo *StatInfo, local string) {
 	var file *os.File
 	stat, err := os.Stat(local)
 	if err == nil && stat.IsDir() {
-		file, err = os.OpenFile(local+"/"+fileInfo.Name, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
+		file, err = os.OpenFile(local+"/"+fileInfo.Name(), os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	} else {
 		file, err = os.OpenFile(local, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0666)
 	}
@@ -101,13 +110,13 @@ func (client *Client) downFile(fileInfo *fileInfo, local string) {
 	stat, _ = file.Stat()
 	defer file.Close()
 	localSize := stat.Size()
-	if localSize == fileInfo.Size {
+	if localSize == fileInfo.Size() {
 		//TODO MD5一致性检查
 		return
 	}
 	req, _ := http.NewRequest(http.MethodGet, fileInfo.getDownloadUrl(), nil)
 	// TODO 大文件分片下载
-	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", localSize, fileInfo.Size))
+	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", localSize, fileInfo.Size()))
 	resp, err := client.api.Do(req)
 	if err != nil {
 		log.Println(err)
@@ -116,8 +125,11 @@ func (client *Client) downFile(fileInfo *fileInfo, local string) {
 	defer resp.Body.Close()
 	io.Copy(file, resp.Body)
 }
+func (client *Client) getFileInfo(id string) (*StatInfo, error) {
+	if v, b := file.DefaultIdDir()[id]; b {
+		return &StatInfo{Id: v.Id, FileName: v.Name, IsFolder: true}, nil
+	}
 
-func (client *Client) getFileInfo(id string) (*fileInfo, error) {
 	params := make(url.Values)
 	params.Set("fileId", id)
 
@@ -128,8 +140,9 @@ func (client *Client) getFileInfo(id string) (*fileInfo, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	defer resp.Body.Close()
-	var file fileInfo
+	var file StatInfo
 	json.NewDecoder(resp.Body).Decode(&file)
 	return &file, nil
 }
