@@ -10,7 +10,10 @@ import (
 )
 
 func TestQrCodeLogin(t *testing.T) {
-	NewContent().QrCode().Login()
+	NewContent().QrLogin()
+}
+func TestPwdLogin(t *testing.T) {
+	NewContent().PwdLogin("xxxx", "xxxxxxxx")
 }
 func TestRefresh(t *testing.T) {
 	GetClient().refresh()

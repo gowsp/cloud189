@@ -20,21 +20,26 @@ func NewContent() *Content {
 func NewContentWithResp(resp *http.Response) *Content {
 	data, _ := io.ReadAll(resp.Body)
 	location := resp.Request.Response.Header.Get("location")
-	content := Content{data: data, Referer: location}
+	cookie := findCookie(resp.Cookies(), "LT")
+	content := Content{Cookie: cookie, data: data, Referer: location}
 	content.parse()
 	return &content
 }
 
 type Content struct {
-	Referer    string
-	RsaKey     string
-	data       []byte
-	AppKey     string
-	ReqId      string
-	IsOauth2   string
-	ParamId    string
-	ReturnUrl  string
-	ClientType string
+	Cookie      *http.Cookie
+	Referer     string
+	RsaKey      string
+	data        []byte
+	AppKey      string
+	ReqId       string
+	IsOauth2    string
+	ParamId     string
+	ReturnUrl   string
+	ClientType  string
+	AccountType string
+	MailSuffix  string
+	Lt          string
 }
 
 func (c *Content) parse() {
@@ -44,11 +49,23 @@ func (c *Content) parse() {
 	c.ParamId = c.read("paramId = \"(\\w+)\"")
 	c.IsOauth2 = c.read("isOauth2 = \"(\\w+)\"")
 	c.ClientType = c.read("clientType = '(\\w+)'")
+	c.AccountType = c.read("accountType = '(\\w+)'")
+	c.MailSuffix = c.read("mailSuffix = '(.+)'")
 	c.ReturnUrl = c.read("returnUrl = '(.+)'")
+	c.Lt = c.read("lt = \"(\\w+)\"")
 }
 
 func (c *Content) read(str string) string {
 	reg := regexp.MustCompile(str)
 	paramId := reg.FindSubmatch(c.data)
 	return string(paramId[1])
+}
+
+func findCookie(cookies []*http.Cookie, name string) *http.Cookie {
+	for _, cookies := range cookies {
+		if cookies.Name == name {
+			return cookies
+		}
+	}
+	return nil
 }

@@ -5,6 +5,7 @@ import (
 )
 
 func TestLogin(t *testing.T) {
+	// rootCmd.SetArgs([]string{"login", "-i", "xxxxx", "xxxxx"})
 	rootCmd.SetArgs([]string{"login"})
 	rootCmd.Execute()
 }

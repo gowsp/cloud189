@@ -2,7 +2,6 @@ package pkg
 
 type Cmd interface {
 	Sign()
-	Login()
 	Ls(path string)
 	Cp(paths ...string)
 	Mv(paths ...string)

@@ -31,6 +31,11 @@ func GetClient() *Client {
 	})
 	return client
 }
+
+func EmptyClient() *Client {
+	return &Client{}
+}
+
 func newClient(sson, auth string) *http.Client {
 	jar, _ := cookiejar.New(nil)
 	user := []*http.Cookie{
@@ -38,7 +43,6 @@ func newClient(sson, auth string) *http.Client {
 	}
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
-	jar.SetCookies(&url.URL{Scheme: "https", Host: "api.cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "open.e.189.cn"}, []*http.Cookie{
 		{Name: "SSON", Value: config.SSON},
 	})
@@ -54,17 +58,22 @@ func (client *Client) refresh() {
 	}
 	defer resp.Body.Close()
 	cookies := client.api.Jar.Cookies(resp.Request.URL)
-	for _, cookie := range cookies {
-		if cookie.Name == "COOKIE_LOGIN_USER" {
-			config := client.config
-			config.Auth = cookie.Value
-			config.SessionKey = getUserBriefInfo(*config).SessionKey
-			config.Save()
-			client.api = newClient(config.SSON, config.Auth)
-			return
-		}
+	cookie := findCookie(cookies, "COOKIE_LOGIN_USER")
+	if cookie != nil {
+		config := client.config
+		config.Auth = cookie.Value
+		config.SessionKey = getUserBriefInfo(*config).SessionKey
+		config.save()
+		client.api = newClient(config.SSON, config.Auth)
+		return
 	}
-	NewContentWithResp(resp).QrCode().Login()
+	user := config.User
+	if user.Name != "" && user.Password != "" {
+		NewContentWithResp(resp).PwdLogin(user.Name, user.Password)
+	} else {
+		NewContentWithResp(resp).QrLogin()
+	}
+	client.api = newClient(config.SSON, config.Auth)
 }
 func (client *Client) rsa() *rsa {
 	config := client.config
@@ -84,7 +93,7 @@ func (client *Client) rsa() *rsa {
 		}
 	}
 	config.RSA = rsa
-	config.Save()
+	config.save()
 	return &rsa
 }
 func (client *Client) initSesstion() {
@@ -93,7 +102,7 @@ func (client *Client) initSesstion() {
 		client.refresh()
 	} else {
 		config.SessionKey = user.SessionKey
-		config.Save()
+		config.save()
 	}
 }
 func (client *Client) sesstionKey() string {
@@ -107,7 +116,7 @@ func (client *Client) sesstionKey() string {
 		client.refresh()
 	} else {
 		config.SessionKey = user.SessionKey
-		config.Save()
+		config.save()
 	}
 	return config.SessionKey
 }
