@@ -2,8 +2,10 @@ package web
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"net/url"
+	"strings"
 
 	"github.com/gowsp/cloud189-cli/pkg/file"
 )
@@ -35,7 +37,7 @@ type folderResp struct {
 
 func (client *Client) mkdir(parentId string, paths ...string) map[string]folderResp {
 	for i, v := range paths {
-		paths[i] = v[1:]
+		paths[i] = strings.TrimPrefix(v, "/")
 	}
 	f := folderList{ParentId: parentId, Paths: paths}
 	data, _ := json.Marshal(f)
@@ -45,11 +47,15 @@ func (client *Client) mkdir(parentId string, paths ...string) map[string]folderR
 	if err != nil {
 		log.Fatalln(err)
 	}
+	data, _ = io.ReadAll(resp.Body)
 	var errorResp errorResp
+	json.Unmarshal(data, &errorResp)
+	if errorResp.IsInvalidSession() {
+		client.initSesstion()
+		return client.mkdir(parentId, paths...)
+	}
 	var result map[string]folderResp
-	decoder := json.NewDecoder(resp.Body)
-	decoder.Decode(&result)
-	decoder.Decode(&errorResp)
+	json.Unmarshal(data, &result)
 	defer resp.Body.Close()
 	return result
 }

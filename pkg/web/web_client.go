@@ -125,6 +125,10 @@ type errorResp struct {
 	ErrorCode string `json:"errorCode,omitempty"`
 }
 
+func (resp *errorResp) IsInvalidSession() bool {
+	return resp.ErrorCode == "InvalidSessionKey"
+}
+
 type briefInfo struct {
 	SessionKey  string `json:"sessionKey,omitempty"`
 	UserAccount string `json:"userAccount,omitempty"`

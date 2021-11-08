@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"io"
+	"io/fs"
 	"log"
 	"math"
 	"os"
@@ -21,7 +22,7 @@ type LocalFile struct {
 	client   pkg.Client
 	parentId string
 	uploadId string
-	name     string
+	path     string
 	info     os.FileInfo
 	partName []string
 	fileMD5  string
@@ -29,30 +30,27 @@ type LocalFile struct {
 	writed   int
 	sliceNum int
 }
+type FilePath struct {
+	FullPath string
+	FileInfo fs.FileInfo
+}
 
-func NewLocalFile(parentId, name string, client pkg.Client) *LocalFile {
-	info, err := os.Stat(name)
-	if err != nil {
-		log.Fatalf("open %v error %v", name, err)
-	}
-	if info.IsDir() {
-		log.Fatalf("folder %s uploads are not supported", name)
-	}
-	size := info.Size()
+func NewLocalFile(parentId string, path *FilePath, client pkg.Client) *LocalFile {
+	size := path.FileInfo.Size()
 	sliceNum := int(math.Ceil(float64(size) / float64(Slice)))
 	return &LocalFile{
 		parentId: parentId,
 		client:   client,
-		info:     info,
-		name:     name,
+		info:     path.FileInfo,
+		path:     path.FullPath,
 		sliceNum: sliceNum,
 		partName: make([]string, sliceNum),
 	}
 }
 func (f *LocalFile) Upload() {
-	file, err := os.Open(f.name)
+	file, err := os.Open(f.path)
 	if err != nil {
-		log.Fatalf("open %v error %v", f.name, err)
+		log.Fatalf("open %v error %v", f.path, err)
 	}
 	defer file.Close()
 	f.md5()
@@ -110,9 +108,9 @@ func (f *LocalFile) SliceMD5() string {
 }
 
 func (f *LocalFile) md5() {
-	file, err := os.Open(f.name)
+	file, err := os.Open(f.path)
 	if err != nil {
-		log.Fatalf("open %v error %v", f.name, err)
+		log.Fatalf("open %v error %v", f.path, err)
 	}
 	defer file.Close()
 

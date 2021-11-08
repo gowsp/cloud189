@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -55,7 +56,40 @@ func (client *Client) Up(cloud string, locals ...string) {
 	file.CheckPath(cloud)
 	dir := client.findOrCreateDir(cloud)
 	for _, local := range locals {
-		i := file.NewLocalFile(dir.Id.String(), local, client)
+		info, err := os.Stat(local)
+		if err != nil {
+			log.Printf("open %v error %v\n", local, err)
+			continue
+		}
+		if info.IsDir() {
+			client.uploadFolder(dir.Id.String(), local)
+			continue
+		}
+		l := &file.FilePath{FullPath: local, FileInfo: info}
+		i := file.NewLocalFile(dir.Id.String(), l, client)
+		i.Upload()
+	}
+}
+func (client *Client) uploadFolder(parentId, local string) {
+	folder := file.ReadDir(local)
+	resp := client.mkdir(parentId, folder.Folders...)
+	for k, v := range resp {
+		files := folder.Files[k]
+		if files == nil {
+			continue
+		}
+		for val := files.Front(); val != nil; val = val.Next() {
+			f := val.Value.(*file.FilePath)
+			i := file.NewLocalFile(v.Id.String(), f, client)
+			i.Upload()
+		}
+	}
+	if folder.Dirict == nil {
+		return
+	}
+	for val := folder.Dirict.Front(); val != nil; val = val.Next() {
+		f := val.Value.(*file.FilePath)
+		i := file.NewLocalFile(parentId, f, client)
 		i.Upload()
 	}
 }

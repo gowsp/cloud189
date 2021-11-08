@@ -163,7 +163,7 @@ func (client *Client) list(id string, page int) []*file.FileInfo {
 	if list.Code.String() == "" {
 		var errorResp errorResp
 		json.Unmarshal(body, &errorResp)
-		if errorResp.ErrorCode == "InvalidSessionKey" {
+		if errorResp.IsInvalidSession() {
 			client.initSesstion()
 			return client.list(id, page)
 		}
