@@ -17,6 +17,10 @@ func (client *Client) Mkdir(clouds ...string) error {
 }
 
 func (client *Client) findOrCreateDir(cloud string) folderResp {
+	dir, err := client.Stat(cloud)
+	if err == nil && dir.IsDir() {
+		return folderResp{json.Number(dir.Id()), true}
+	}
 	resp := client.mkdir(file.Root.Id.String(), cloud)
 	target := resp[cloud[1:]]
 	if target.Success {

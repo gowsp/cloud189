@@ -23,7 +23,10 @@ func NewStreamFile(name string, size int64, client pkg.Client) webdav.File {
 	if err != nil {
 		return nil
 	}
+	return NewStreamFileWithParent(name, parent.Id(), size, client)
+}
 
+func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Client) webdav.File {
 	buffSize := Slice
 	if size < Slice {
 		buffSize = int(size)
@@ -33,7 +36,7 @@ func NewStreamFile(name string, size int64, client pkg.Client) webdav.File {
 		client:   client,
 		partNum:  num,
 		parts:    make([]string, num),
-		parentId: parent.Id(),
+		parentId: parentId,
 		name:     name,
 		size:     size,
 		fileMd5:  md5.New(),

@@ -56,6 +56,11 @@ func (client *Client) Up(cloud string, locals ...string) {
 	file.CheckPath(cloud)
 	dir := client.findOrCreateDir(cloud)
 	for _, local := range locals {
+		if file.IsNetFile(local) {
+			f := file.NewNetFile(dir.Id.String(), local, client)
+			f.Upload()
+			continue
+		}
 		info, err := os.Stat(local)
 		if err != nil {
 			log.Printf("open %v error %v\n", local, err)

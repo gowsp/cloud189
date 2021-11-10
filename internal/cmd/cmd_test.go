@@ -18,7 +18,8 @@ func TestMkdir(t *testing.T) {
 	rootCmd.Execute()
 }
 func TestUp(t *testing.T) {
-	rootCmd.SetArgs([]string{"up", "../../README.md", "../../LICENSE", "/demo/1/2"})
+	rootCmd.SetArgs([]string{"up", "https://github.com/gowsp/cloud189/releases/download/v0.2/cloud189_0.2_windows_amd64.zip",
+		"../../internal", "../../LICENSE", "/demo/1/2"})
 	rootCmd.Execute()
 }
 func TestLs(t *testing.T) {
