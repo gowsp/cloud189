@@ -151,3 +151,13 @@ func getUserBriefInfo(config Config) *briefInfo {
 	json.NewDecoder(resp.Body).Decode(&user)
 	return &user
 }
+
+func (client *Client) isInvalidSession(data []byte) (invalid bool) {
+	var errorResp errorResp
+	json.Unmarshal(data, &errorResp)
+	invalid = errorResp.IsInvalidSession()
+	if invalid {
+		client.refresh()
+	}
+	return
+}

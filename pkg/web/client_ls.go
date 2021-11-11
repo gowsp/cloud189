@@ -9,7 +9,6 @@ import (
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -60,45 +59,43 @@ func (client *Client) finds(paths ...string) []*file.FileInfo {
 	for _, path := range paths {
 		info, err := client.Stat(path)
 		if err != nil {
-			log.Printf("%s not found, skip\n", path)
+			fmt.Printf("%s not found, skip\n", path)
 			continue
 		}
 		files = append(files, info.(*file.FileInfo))
 	}
 	return files
 }
-func (client *Client) Stat(cloud string) (pkg.FileInfo, error) {
+func (client *Client) Stat(cloud string) (info pkg.FileInfo, err error) {
 	file.CheckPath(cloud)
+	info = &file.FileInfo{FileId: file.Root.Id, FileName: file.Root.Name, IsFolder: true}
 	if cloud == "/" {
-		return &file.FileInfo{FileId: file.Root.Id, FileName: file.Root.Name, IsFolder: true}, nil
+		return info, nil
 	}
-	info := &file.FileInfo{FileId: file.Root.Id, FileName: file.Root.Name, IsFolder: true}
-	paths := strings.Split(cloud, "/")
+	dir := filepath.Dir(cloud)
+	if dir == "/" {
+		name := filepath.Base(cloud)
+		info, err = client.search(info.Id(), name, 1, false)
+		return
+	}
+	paths := strings.Split(dir, "/")
 	count := len(paths)
 	for i := 1; i < count; i++ {
 		path := paths[i]
-		if i == 1 {
-			if v, f := file.DefaultNameDir()[path]; f {
-				info = &file.FileInfo{FileId: v.Id, FileName: v.Name, IsFolder: true}
-				continue
-			}
-		}
-		files := client.list(info.FileId.String(), 1)
-		for _, v := range files {
-			if v.Name() == path {
-				info = v
-				break
-			}
+		info, err = client.findFolder(info.Id(), path)
+		if err != nil {
+			return nil, err
 		}
 	}
-	base := filepath.Base(cloud)
-	if base == info.Name() {
-		return info, nil
+	if strings.HasSuffix(cloud, "/") {
+		return
 	}
-	return nil, os.ErrNotExist
+	name := filepath.Base(cloud)
+	info, err = client.search(info.Id(), name, 1, false)
+	return
 }
 
-func (client *Client) Search(id, name string, page int, includAll bool) []*file.FileInfo {
+func (client *Client) search(id, name string, page int, includAll bool) (pkg.FileInfo, error) {
 	params := make(url.Values)
 	params.Set("noCache", fmt.Sprintf("%v", rand.Float64()))
 	params.Set("folderId", id)
@@ -116,23 +113,66 @@ func (client *Client) Search(id, name string, page int, includAll bool) []*file.
 
 	req, _ := http.NewRequest(http.MethodGet, "https://cloud.189.cn/api/open/file/searchFiles.action?"+params.Encode(), nil)
 	req.Header.Add("accept", "application/json;charset=UTF-8")
-	var files searchResp
 	resp, err := client.api.Do(req)
-	if resp.StatusCode != 200 || err != nil {
-		log.Fatalln("list file error")
+	if err != nil {
+		return nil, err
 	}
 	defer resp.Body.Close()
+	var files searchResp
 	json.NewDecoder(resp.Body).Decode(&files)
-	for _, v := range files.Folders {
-		v.IsFolder = true
+	if files.ErrorCode == "InvalidSessionKey" {
+		client.refresh()
+		return client.search(id, name, page, includAll)
 	}
-	result := make([]*file.FileInfo, 0, files.Count)
-	result = append(result, files.Files...)
-	result = append(result, files.Folders...)
+	for _, folder := range files.Folders {
+		folder.IsFolder = true
+		if folder.Name() == name {
+			return folder, nil
+		}
+	}
+	for _, file := range files.Files {
+		if file.Name() == name {
+			return file, nil
+		}
+	}
 	if files.Count > len(files.Files)+len(files.Folders) {
-		result = append(result, client.Search(id, name, page+1, includAll)...)
+		return client.search(id, name, page+1, includAll)
 	}
-	return result
+	return nil, fs.ErrNotExist
+}
+
+func (Client *Client) findFolder(parentId, name string) (pkg.FileInfo, error) {
+	folders, err := client.findFolders(parentId)
+	if err != nil {
+		return nil, err
+	}
+	for _, folder := range folders {
+		if folder.FileName == name {
+			return folder, nil
+		}
+	}
+	return nil, fs.ErrNotExist
+}
+func (Client *Client) findFolders(parentId string) ([]*file.FileInfo, error) {
+	params := make(url.Values)
+	params.Set("id", parentId)
+	params.Set("orderBy", "1")
+	params.Set("order", "ASC")
+	resp, err := client.api.PostForm("https://cloud.189.cn/api/portal/getObjectFolderNodes.action", params)
+	if err != nil {
+		return nil, err
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	var folders []*file.FileInfo
+	json.Unmarshal(data, &folders)
+	if len(folders) == 0 && client.isInvalidSession(data) {
+		return client.findFolders(parentId)
+	}
+	return folders, nil
 }
 
 func (client *Client) Readdir(id string, count int) []fs.FileInfo {
@@ -160,13 +200,8 @@ func (client *Client) list(id string, page int) []*file.FileInfo {
 	body, _ := io.ReadAll(resp.Body)
 	var list listResp
 	json.Unmarshal(body, &list)
-	if list.Code.String() == "" {
-		var errorResp errorResp
-		json.Unmarshal(body, &errorResp)
-		if errorResp.IsInvalidSession() {
-			client.initSesstion()
-			return client.list(id, page)
-		}
+	if list.Code.String() == "" && client.isInvalidSession(body) {
+		return client.list(id, page)
 	}
 
 	data := list.Data

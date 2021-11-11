@@ -17,10 +17,6 @@ func (client *Client) Mkdir(clouds ...string) error {
 }
 
 func (client *Client) findOrCreateDir(cloud string) folderResp {
-	dir, err := client.Stat(cloud)
-	if err == nil && dir.IsDir() {
-		return folderResp{json.Number(dir.Id()), true}
-	}
 	resp := client.mkdir(file.Root.Id.String(), cloud)
 	target := resp[cloud[1:]]
 	if target.Success {
@@ -52,10 +48,7 @@ func (client *Client) mkdir(parentId string, paths ...string) map[string]folderR
 		log.Fatalln(err)
 	}
 	data, _ = io.ReadAll(resp.Body)
-	var errorResp errorResp
-	json.Unmarshal(data, &errorResp)
-	if errorResp.IsInvalidSession() {
-		client.initSesstion()
+	if client.isInvalidSession(data) {
 		return client.mkdir(parentId, paths...)
 	}
 	var result map[string]folderResp
