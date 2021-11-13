@@ -1,6 +1,7 @@
 package pkg
 
 type Cmd interface {
+	Df()
 	Sign()
 	Ls(path string)
 	Cp(paths ...string)

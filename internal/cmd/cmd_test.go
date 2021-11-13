@@ -46,6 +46,10 @@ func TestRm(t *testing.T) {
 	rootCmd.SetArgs([]string{"rm", "/demo"})
 	rootCmd.Execute()
 }
+func TestDf(t *testing.T) {
+	rootCmd.SetArgs([]string{"df"})
+	rootCmd.Execute()
+}
 func TestWebDav(t *testing.T) {
 	rootCmd.SetArgs([]string{"webdav", ":80"})
 	rootCmd.Execute()

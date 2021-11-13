@@ -3,6 +3,7 @@ package file
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path"
 	"strconv"
@@ -12,9 +13,31 @@ import (
 const (
 	KB = 1 << 10
 	MB = 1 << 20
+	GB = 1 << 30
+	TB = 1 << 40
 
 	Slice = 10 * MB
 )
+
+func Readable(size uint64) string {
+	result := float64(size)
+	unit := ""
+	switch {
+	case size >= TB:
+		unit = "T"
+		result /= TB
+	case size >= GB:
+		unit = "G"
+		result /= GB
+	case size >= MB:
+		unit = "M"
+		result /= MB
+	case size >= KB:
+		unit = "K"
+		result /= KB
+	}
+	return fmt.Sprintf("%.2f%s", result, unit)
+}
 
 type FileInfo struct {
 	FileId      json.Number `json:"id,omitempty"`
