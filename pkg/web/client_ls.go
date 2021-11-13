@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -38,19 +38,17 @@ type searchResp struct {
 func (client *Client) Ls(path string) {
 	info, err := client.Stat(path)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
+	fmt.Printf("%-32s%-12s%s\n", "Name", "Size", "ModTime")
 	if info.IsDir() {
 		files := client.list(info.Id(), 1)
 		for _, v := range files {
-			if v.IsDir() {
-				fmt.Printf("- %s\n", v.Name())
-			} else {
-				fmt.Printf("f %s\n", v.Name())
-			}
+			fmt.Println(file.ReadableFileInfo(v))
 		}
 	} else {
-		fmt.Printf("f %s\n", info.Name())
+		fmt.Println(file.ReadableFileInfo(info))
 	}
 }
 

@@ -42,11 +42,11 @@ func (client *Client) Df() {
 	}
 	var space space
 	xml.Unmarshal(data, &space)
-	fmt.Println("Size\t\tUsed\t\tAvail\t\tUse%")
-	fmt.Printf("%s\t\t%s\t\t%s\t\t%.2f%%\n",
-		file.Readable(space.size()),
-		file.Readable(space.used()),
-		file.Readable(space.available()),
+	fmt.Printf("%-12s%-12s%-12s%s\n", "Size", "Used", "Avail", "Use%")
+	fmt.Printf("%-12s%-12s%-12s%.2f%%\n",
+		file.ReadableSize(space.size()),
+		file.ReadableSize(space.used()),
+		file.ReadableSize(space.available()),
 		space.usedPercent(),
 	)
 }

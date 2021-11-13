@@ -8,6 +8,8 @@ import (
 	"path"
 	"strconv"
 	"time"
+
+	"github.com/gowsp/cloud189-cli/pkg"
 )
 
 const (
@@ -19,7 +21,7 @@ const (
 	Slice = 10 * MB
 )
 
-func Readable(size uint64) string {
+func ReadableSize(size uint64) string {
 	result := float64(size)
 	unit := ""
 	switch {
@@ -37,6 +39,17 @@ func Readable(size uint64) string {
 		result /= KB
 	}
 	return fmt.Sprintf("%.2f%s", result, unit)
+}
+
+func ReadableFileInfo(info pkg.FileInfo) string {
+	var size string
+	if info.IsDir() {
+		size = "-"
+	} else {
+		size = ReadableSize(uint64(info.Size()))
+	}
+	modTime := info.ModTime().Format("2006-01-02 15:04:05")
+	return fmt.Sprintf("%-32s%-12s%s", info.Name(), size, modTime)
 }
 
 type FileInfo struct {
