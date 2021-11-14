@@ -17,6 +17,9 @@ func (client *Client) Mkdir(clouds ...string) error {
 }
 
 func (client *Client) findOrCreateDir(cloud string) folderResp {
+	if cloud == "/" {
+		return folderResp{Id: "-11", Success: true}
+	}
 	resp := client.mkdir(file.Root.Id.String(), cloud)
 	target := resp[cloud[1:]]
 	if target.Success {
