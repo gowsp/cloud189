@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"log"
 	"net/url"
-	"os"
 	"path"
 
 	"github.com/gowsp/cloud189-cli/pkg/file"
@@ -14,13 +13,14 @@ func (client *Client) Rename(src, dest string) error {
 	file.CheckPath(src, dest)
 	f, err := client.Stat(src)
 	if err != nil {
-		return os.ErrNotExist
+		return err
 	}
 	dest = path.Base(dest)
 	if f.IsDir() {
 		client.renameFolder(f.Id(), dest)
+	} else {
+		client.renameFile(f.Id(), dest)
 	}
-	client.renameFile(f.Id(), dest)
 	return nil
 }
 

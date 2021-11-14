@@ -50,12 +50,12 @@ func (client *Client) mkdir(parentId string, paths ...string) map[string]folderR
 	if err != nil {
 		log.Fatalln(err)
 	}
+	defer resp.Body.Close()
 	data, _ = io.ReadAll(resp.Body)
 	if client.isInvalidSession(data) {
 		return client.mkdir(parentId, paths...)
 	}
 	var result map[string]folderResp
 	json.Unmarshal(data, &result)
-	defer resp.Body.Close()
 	return result
 }

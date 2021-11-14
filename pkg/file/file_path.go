@@ -2,8 +2,9 @@ package file
 
 import (
 	"container/list"
+	"fmt"
 	"io/fs"
-	"log"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -11,7 +12,8 @@ import (
 func CheckPath(paths ...string) {
 	for _, v := range paths {
 		if !strings.HasPrefix(v, "/") {
-			log.Fatalf("path %s must start with /\n", v)
+			fmt.Printf("path %s must start with /\n", v)
+			os.Exit(1)
 		}
 	}
 }

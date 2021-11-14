@@ -37,11 +37,6 @@ var loader = func() {
 	idMapDir["-16"] = App
 }
 
-func DefaultNameDir() map[string]ReadableFile {
-	defaultDirInstance.Do(loader)
-	return nameMapDir
-}
-
 func DefaultIdDir() map[string]ReadableFile {
 	defaultDirInstance.Do(loader)
 	return idMapDir
