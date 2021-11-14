@@ -4,8 +4,10 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"path"
 	"regexp"
+	"strings"
 
 	"github.com/gowsp/cloud189-cli/pkg"
 )
@@ -37,7 +39,14 @@ func (f *NetFile) Upload() {
 		log.Println("not found content, skip")
 		return
 	}
-	name := path.Base(f.url)
+	var name string
+	header := resp.Header.Get("Content-Disposition")
+	if header == "" {
+		name = path.Base(f.url)
+	} else {
+		name = strings.Split(header, "filename=")[1]
+		name, _ = url.PathUnescape(name)
+	}
 	sf := NewStreamFileWithParent(name, f.parentId, size, f.client)
 	io.Copy(sf, resp.Body)
 }
