@@ -49,7 +49,7 @@ func ReadableFileInfo(info pkg.FileInfo) string {
 		size = ReadableSize(uint64(info.Size()))
 	}
 	modTime := info.ModTime().Format("2006-01-02 15:04:05")
-	return fmt.Sprintf("%-32s%-12s%s", info.Name(), size, modTime)
+	return fmt.Sprintf("%-10s%-22s%s", size, modTime, info.Name())
 }
 
 type FileInfo struct {

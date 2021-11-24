@@ -41,7 +41,6 @@ func (client *Client) Ls(path string) {
 		fmt.Println(err)
 		os.Exit(1)
 	}
-	fmt.Printf("%-32s%-12s%s\n", "Name", "Size", "ModTime")
 	if info.IsDir() {
 		files := client.list(info.Id(), 1)
 		for _, v := range files {
@@ -76,7 +75,7 @@ func (client *Client) Stat(cloud string) (info pkg.FileInfo, err error) {
 		info, err = client.search(info.Id(), name, 1, false)
 		return
 	}
-	paths := strings.Split(dir, "/")
+	paths := strings.Split(dir, string(os.PathSeparator))
 	count := len(paths)
 	for i := 1; i < count; i++ {
 		path := paths[i]
@@ -94,6 +93,11 @@ func (client *Client) Stat(cloud string) (info pkg.FileInfo, err error) {
 }
 
 func (client *Client) search(id, name string, page int, includAll bool) (pkg.FileInfo, error) {
+	if id == "-11" {
+		if f, ok := file.DefaultNameDir()[name]; ok {
+			return &file.FileInfo{FileId: f.Id, FileName: f.Name, IsFolder: true}, nil
+		}
+	}
 	params := make(url.Values)
 	params.Set("noCache", fmt.Sprintf("%v", rand.Float64()))
 	params.Set("folderId", id)

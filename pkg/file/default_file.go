@@ -41,3 +41,8 @@ func DefaultIdDir() map[string]ReadableFile {
 	defaultDirInstance.Do(loader)
 	return idMapDir
 }
+
+func DefaultNameDir() map[string]ReadableFile {
+	defaultDirInstance.Do(loader)
+	return nameMapDir
+}
