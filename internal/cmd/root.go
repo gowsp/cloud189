@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	cfgFile string
 	rootCmd = &cobra.Command{
 		Use:  "cloud189",
 		Long: "cloud189 enables users to manage cloud files through the command line. For more information, please visit https://github.com/gowsp/cloud189",
@@ -23,6 +24,8 @@ func Execute(cmds ...*cobra.Command) {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cloud189/config.json)")
+
 	rootCmd.AddCommand(loginCmd)
 	rootCmd.AddCommand(signCmd)
 	rootCmd.AddCommand(upCmd)

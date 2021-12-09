@@ -7,6 +7,9 @@ import (
 	"net/url"
 	"strconv"
 	"time"
+
+	"github.com/gowsp/cloud189-cli/pkg/config"
+	"github.com/gowsp/cloud189-cli/pkg/util"
 )
 
 type QrCodeReq struct {
@@ -16,7 +19,7 @@ type QrCodeReq struct {
 	Encodeuuid string `json:"encodeuuid,omitempty"`
 }
 
-func (c *Content) QrLogin() {
+func (c *Content) QrLogin() *config.Config{
 	req, _ := http.NewRequest(http.MethodGet, "https://open.e.189.cn/api/logbox/oauth2/getUUID.do", nil)
 	param := req.URL.Query()
 	param.Set("appId", c.AppKey)
@@ -41,9 +44,9 @@ func (c *Content) QrLogin() {
 		case 0:
 			t.Stop()
 			log.Println("logged")
-			config = Config{}
-			config.storeLoginInfo(status.RedirectUrl, status.SSON)
-			return
+			config := config.Config{}
+			config.SsonLogin(status.RedirectUrl, status.SSON)
+			return &config
 		default:
 			log.Fatalln("unknown status")
 		}
@@ -82,6 +85,6 @@ func (c *QrCodeReq) query() qrCodeState {
 	if status.Status != 0 {
 		return status
 	}
-	status.SSON = findCookie(resp.Cookies(), "SSON")
+	status.SSON = util.FindCookie(resp.Cookies(), "SSON")
 	return status
 }

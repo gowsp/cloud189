@@ -10,6 +10,6 @@ var mvCmd = &cobra.Command{
 	Short: "move file",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Mv(args...)
+		web.NewClient(cfgFile).Mv(args...)
 	},
 }

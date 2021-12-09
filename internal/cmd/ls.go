@@ -11,9 +11,9 @@ var lsCmd = &cobra.Command{
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) == 0 {
-			web.GetClient().Ls("/")
+			web.NewClient(cfgFile).Ls("/")
 			return
 		}
-		web.GetClient().Ls(args[0])
+		web.NewClient(cfgFile).Ls(args[0])
 	},
 }

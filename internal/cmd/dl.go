@@ -13,6 +13,6 @@ var dlCmd = &cobra.Command{
 		length := len(args)
 		clouds := args[:length-1]
 		local := args[length-1]
-		web.GetClient().Dl(local, clouds...)
+		web.NewClient(cfgFile).Dl(local, clouds...)
 	},
 }

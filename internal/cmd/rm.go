@@ -10,6 +10,6 @@ var rmCmd = &cobra.Command{
 	Short: "remove file",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Rm(args...)
+		web.NewClient(cfgFile).Rm(args...)
 	},
 }

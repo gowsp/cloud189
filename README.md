@@ -4,7 +4,7 @@
 
 ## 命令列表
 
-命令中云端路径均以`/`开头, `...`表示支持多参数, 生成的配置文件存放于`${HOME}/.config/cloud189/config.json`
+命令中云端路径均以`/`开头, `...`表示支持多参数, 全局参数`--config`指定配置文件路径，默认路径为`${HOME}/.config/cloud189/config.json`，例：`cloud189 --config /tmp/config.json ls {云盘路径}`
 
 - 显示帮助: `cloud189 -h`
 - 显示版本: `cloud189 version`

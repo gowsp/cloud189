@@ -11,6 +11,9 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/gowsp/cloud189-cli/pkg/config"
+	"github.com/gowsp/cloud189-cli/pkg/util"
 )
 
 var client *Client
@@ -18,12 +21,18 @@ var clientSingleton sync.Once
 
 type Client struct {
 	api    *http.Client
-	config *Config
+	config *config.Config
 }
 
-func GetClient() *Client {
+// use config
+func NewClient(configPath string) *Client {
+	config.InitConfigFile(configPath)
 	clientSingleton.Do(func() {
-		config := GetConfig()
+		config, err := config.OpenConfig()
+		if err != nil {
+			config = NewContent().QrLogin()
+			config.Save()
+		}
 		client = &Client{
 			config: config,
 			api:    newClient(config.SSON, config.Auth),
@@ -32,19 +41,26 @@ func GetClient() *Client {
 	return client
 }
 
-func EmptyClient() *Client {
-	return &Client{}
+func NewClientWithUser(name, password string) *Client {
+	clientSingleton.Do(func() {
+		config := NewContent().PwdLogin(name, password)
+		client = &Client{
+			config: config,
+			api:    newClient(config.SSON, config.Auth),
+		}
+	})
+	return client
 }
 
 func newClient(sson, auth string) *http.Client {
 	jar, _ := cookiejar.New(nil)
 	user := []*http.Cookie{
-		{Name: "COOKIE_LOGIN_USER", Value: config.Auth},
+		{Name: "COOKIE_LOGIN_USER", Value: auth},
 	}
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "open.e.189.cn"}, []*http.Cookie{
-		{Name: "SSON", Value: config.SSON},
+		{Name: "SSON", Value: sson},
 	})
 	return &http.Client{Jar: jar}
 }
@@ -58,24 +74,25 @@ func (client *Client) refresh() {
 	}
 	defer resp.Body.Close()
 	cookies := client.api.Jar.Cookies(resp.Request.URL)
-	cookie := findCookie(cookies, "COOKIE_LOGIN_USER")
+	cookie := util.FindCookie(cookies, "COOKIE_LOGIN_USER")
 	if cookie != nil {
 		config := client.config
 		config.Auth = cookie.Value
 		config.SessionKey = getUserBriefInfo(*config).SessionKey
-		config.save()
+		config.Save()
 		client.api = newClient(config.SSON, config.Auth)
 		return
 	}
-	user := config.User
+	user := client.config.User
 	if user.Name != "" && user.Password != "" {
-		NewContentWithResp(resp).PwdLogin(user.Name, user.Password)
+		client.config = NewContentWithResp(resp).PwdLogin(user.Name, user.Password)
 	} else {
-		NewContentWithResp(resp).QrLogin()
+		client.config = NewContentWithResp(resp).QrLogin()
 	}
-	client.api = newClient(config.SSON, config.Auth)
+	client.config.Save()
+	client.api = newClient(client.config.SSON, client.config.Auth)
 }
-func (client *Client) rsa() *rsa {
+func (client *Client) rsa() *config.RsaConfig {
 	config := client.config
 	rsa := client.config.RSA
 	now := time.Now().UnixMilli()
@@ -93,7 +110,7 @@ func (client *Client) rsa() *rsa {
 		}
 	}
 	config.RSA = rsa
-	config.save()
+	client.config.Save()
 	return &rsa
 }
 func (client *Client) initSesstion() {
@@ -101,8 +118,8 @@ func (client *Client) initSesstion() {
 	if user.SessionKey == "" {
 		client.refresh()
 	} else {
-		config.SessionKey = user.SessionKey
-		config.save()
+		client.config.SessionKey = user.SessionKey
+		client.config.Save()
 	}
 }
 func (client *Client) sesstionKey() string {
@@ -116,7 +133,7 @@ func (client *Client) sesstionKey() string {
 		client.refresh()
 	} else {
 		config.SessionKey = user.SessionKey
-		config.save()
+		client.config.Save()
 	}
 	return config.SessionKey
 }
@@ -134,7 +151,7 @@ type briefInfo struct {
 	UserAccount string `json:"userAccount,omitempty"`
 }
 
-func getUserBriefInfo(config Config) *briefInfo {
+func getUserBriefInfo(config config.Config) *briefInfo {
 	u := fmt.Sprintf("https://cloud.189.cn/v2/getUserBriefInfo.action?noCache=%v", rand.Float64())
 	req, _ := http.NewRequest(http.MethodGet, u, nil)
 	req.AddCookie(&http.Cookie{Name: "COOKIE_LOGIN_USER", Value: config.Auth})

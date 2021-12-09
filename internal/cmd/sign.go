@@ -9,6 +9,6 @@ var signCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "sign",
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Sign()
+		web.NewClient(cfgFile).Sign()
 	},
 }

@@ -10,6 +10,6 @@ var mkdirCmd = &cobra.Command{
 	Short: "mkdir on remote",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Mkdir(args...)
+		web.NewClient(cfgFile).Mkdir(args...)
 	},
 }

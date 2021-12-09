@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/gowsp/cloud189-cli/pkg/config"
 	"github.com/gowsp/cloud189-cli/pkg/util"
 )
 
@@ -17,8 +18,8 @@ type pwdLoginResult struct {
 	Msg    string `json:"msg,omitempty"`
 }
 
-func (ctx *Content) PwdLogin(name, password string) {
-	user := User{Name: name, Password: password}
+func (ctx *Content) PwdLogin(name, password string) *config.Config {
+	user := config.User{Name: name, Password: password}
 	key := util.Key(ctx.RsaKey)
 	data, _ := util.RsaEncrypt(key, []byte(name))
 	name = hex.EncodeToString(data)
@@ -51,9 +52,11 @@ func (ctx *Content) PwdLogin(name, password string) {
 	json.NewDecoder(resp.Body).Decode(&result)
 	resp.Body.Close()
 	if result.Result == 0 {
-		sson := findCookie(resp.Cookies(), "SSON")
-		config = Config{User: user}
-		config.storeLoginInfo(result.ToUrl, sson)
+		sson := util.FindCookie(resp.Cookies(), "SSON")
+		config := config.Config{User: user}
+		config.SsonLogin(result.ToUrl, sson)
+		return &config
 	}
 	fmt.Println(result.Msg)
+	return nil
 }

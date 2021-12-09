@@ -9,6 +9,6 @@ var dfCmd = &cobra.Command{
 	Use:   "df",
 	Short: "show information about the space used",
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Df()
+		web.NewClient(cfgFile).Df()
 	},
 }

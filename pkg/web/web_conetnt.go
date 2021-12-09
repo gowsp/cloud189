@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+
+	"github.com/gowsp/cloud189-cli/pkg/util"
 )
 
 func NewContent() *Content {
@@ -20,7 +22,7 @@ func NewContent() *Content {
 func NewContentWithResp(resp *http.Response) *Content {
 	data, _ := io.ReadAll(resp.Body)
 	location := resp.Request.Response.Header.Get("location")
-	cookie := findCookie(resp.Cookies(), "LT")
+	cookie := util.FindCookie(resp.Cookies(), "LT")
 	content := Content{Cookie: cookie, data: data, Referer: location}
 	content.parse()
 	return &content
@@ -59,13 +61,4 @@ func (c *Content) read(str string) string {
 	reg := regexp.MustCompile(str)
 	paramId := reg.FindSubmatch(c.data)
 	return string(paramId[1])
-}
-
-func findCookie(cookies []*http.Cookie, name string) *http.Cookie {
-	for _, cookies := range cookies {
-		if cookies.Name == name {
-			return cookies
-		}
-	}
-	return nil
 }

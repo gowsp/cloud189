@@ -13,6 +13,6 @@ var upCmd = &cobra.Command{
 		length := len(args)
 		cloud := args[length-1]
 		locals := args[:length-1]
-		web.GetClient().Up(cloud, locals...)
+		web.NewClient(cfgFile).Up(cloud, locals...)
 	},
 }

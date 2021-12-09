@@ -10,6 +10,6 @@ var cpCmd = &cobra.Command{
 	Short: "copy file",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.GetClient().Cp(args...)
+		web.NewClient(cfgFile).Cp(args...)
 	},
 }

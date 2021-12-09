@@ -16,40 +16,40 @@ func TestPwdLogin(t *testing.T) {
 	NewContent().PwdLogin("xxxx", "xxxxxxxx")
 }
 func TestRefresh(t *testing.T) {
-	GetClient().refresh()
+	NewClient("").refresh()
 }
 func TestMkdir(t *testing.T) {
-	GetClient().Mkdir("/demo", "/demo/1/2", "/demo/1/3")
+	NewClient("").Mkdir("/demo", "/demo/1/2", "/demo/1/3")
 }
 func TestUp(t *testing.T) {
-	GetClient().Up("/demo/1/2", "../../README.md", "../../LICENSE")
+	NewClient("").Up("/demo/1/2", "../../README.md", "../../LICENSE")
 }
 func TestLs(t *testing.T) {
-	GetClient().Ls("/demo/1/2")
+	NewClient("").Ls("/demo/1/2")
 }
 func TestReadir(t *testing.T) {
-	client := GetClient()
+	client := NewClient("")
 	data, _ := client.Stat("/demo/1/2")
 	client.Readdir(data.Id(), 0)
 }
 func TestDownFile(t *testing.T) {
-	GetClient().Dl("d:/", "/demo/")
+	NewClient("").Dl("d:/", "/demo/")
 }
 func TestDownDir(t *testing.T) {
-	GetClient().Dl("d:/", "/demo/")
+	NewClient("").Dl("d:/", "/demo/")
 }
 func TestCp(t *testing.T) {
-	GetClient().Cp("/demo/1/2", "/demo")
+	NewClient("").Cp("/demo/1/2", "/demo")
 }
 func TestMv(t *testing.T) {
-	GetClient().Mv("/demo/1/3", "/demo")
+	NewClient("").Mv("/demo/1/3", "/demo")
 }
 func TestRm(t *testing.T) {
-	GetClient().Rm("/demo/1/2", "/demo")
+	NewClient("").Rm("/demo/1/2", "/demo")
 }
 
 func TestSign(t *testing.T) {
-	GetClient().Sign()
+	NewClient("").Sign()
 }
 
 func TestEncrypt(t *testing.T) {

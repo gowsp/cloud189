@@ -278,7 +278,7 @@ func (client *Client) createRequest(u string, f url.Values) *http.Request {
 	g := util.SHA1(util.EncodeParam(a), l)
 
 	rsa := client.rsa()
-	b := rsa.encrypt(l)
+	b := rsa.Encrypt(l)
 
 	req, err := http.NewRequest(http.MethodGet, "https://upload.cloud.189.cn"+u+"?params="+h, nil)
 	if err != nil {
