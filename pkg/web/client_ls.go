@@ -35,22 +35,6 @@ type searchResp struct {
 	Folders   []*file.FileInfo `json:"folderList,omitempty"`
 }
 
-func (client *Client) Ls(path string) {
-	info, err := client.Stat(path)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	if info.IsDir() {
-		files := client.list(info.Id(), 1)
-		for _, v := range files {
-			fmt.Println(file.ReadableFileInfo(v))
-		}
-	} else {
-		fmt.Println(file.ReadableFileInfo(info))
-	}
-}
-
 func (client *Client) finds(paths ...string) []*file.FileInfo {
 	files := make([]*file.FileInfo, 0, len(paths))
 	for _, path := range paths {
@@ -178,14 +162,15 @@ func (Client *Client) findFolders(parentId string) ([]*file.FileInfo, error) {
 }
 
 func (client *Client) Readdir(id string, count int) []fs.FileInfo {
-	data := client.list(id, 1)
+	data := client.List(id, 1)
 	result := make([]fs.FileInfo, len(data))
 	for i, v := range data {
 		result[i] = v
 	}
 	return result
 }
-func (client *Client) list(id string, page int) []*file.FileInfo {
+
+func (client *Client) List(id string, page int) []pkg.FileInfo {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("pageNum", strconv.Itoa(page))
@@ -203,18 +188,22 @@ func (client *Client) list(id string, page int) []*file.FileInfo {
 	var list listResp
 	json.Unmarshal(body, &list)
 	if list.Code.String() == "" && client.isInvalidSession(body) {
-		return client.list(id, page)
+		return client.List(id, page)
 	}
 
 	data := list.Data
 	for _, v := range data.Folders {
 		v.IsFolder = true
 	}
-	result := make([]*file.FileInfo, 0, data.Count)
-	result = append(result, data.Files...)
-	result = append(result, data.Folders...)
+	result := make([]pkg.FileInfo, 0, data.Count)
+	for _, v := range data.Files {
+		result = append(result, v)
+	}
+	for _, v := range data.Folders {
+		result = append(result, v)
+	}
 	if data.Count > len(data.Files)+len(data.Folders) {
-		result = append(result, client.list(id, page+1)...)
+		result = append(result, client.List(id, page+1)...)
 	}
 	return result
 }

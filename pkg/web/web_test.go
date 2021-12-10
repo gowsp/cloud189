@@ -25,7 +25,7 @@ func TestUp(t *testing.T) {
 	NewClient("").Up("/demo/1/2", "../../README.md", "../../LICENSE")
 }
 func TestLs(t *testing.T) {
-	NewClient("").Ls("/demo/1/2")
+	NewClient("").List("/demo/1/2", 1)
 }
 func TestReadir(t *testing.T) {
 	client := NewClient("")

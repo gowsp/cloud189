@@ -77,15 +77,15 @@ func mkdir(dirs ...string) string {
 	return path
 }
 
-func (ctx *Config) SsonLogin(url string, sson *http.Cookie) {
+func (c *Config) SsonLogin(url string, sson *http.Cookie) {
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	req.AddCookie(sson)
 	jar, _ := cookiejar.New(nil)
 	api := &http.Client{Jar: jar}
 	resp, _ := api.Do(req)
 	cookie := util.FindCookie(jar.Cookies(resp.Request.URL), "COOKIE_LOGIN_USER")
-	ctx.SSON = sson.Value
-	ctx.Auth = cookie.Value
+	c.SSON = sson.Value
+	c.Auth = cookie.Value
 }
 
 func (config *Config) Save() {

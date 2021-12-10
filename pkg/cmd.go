@@ -1,9 +1,10 @@
 package pkg
 
+
 type Cmd interface {
 	Df()
 	Sign()
-	Ls(path string)
+	List(id string, page int) []FileInfo
 	Cp(paths ...string)
 	Mv(paths ...string)
 	Rm(paths ...string)
