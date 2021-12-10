@@ -70,7 +70,7 @@ func (c *Client) downByFolderId(dir string, local string, pageNum int) {
 	local = local + "/" + folder.Name()
 	_, err = os.Stat(local)
 	if os.IsNotExist(err) {
-		err = os.Mkdir(local, 0666)
+		err = os.Mkdir(local, 0766)
 		if err != nil {
 			log.Println(err)
 			return
