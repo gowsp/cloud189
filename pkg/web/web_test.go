@@ -24,6 +24,9 @@ func TestMkdir(t *testing.T) {
 func TestUp(t *testing.T) {
 	NewClient("").Up("/demo/1/2", "../../README.md", "../../LICENSE")
 }
+func TestFastUp(t *testing.T) {
+	NewClient("").Up("/demo/", "fast://3BACAB45A36BE381390035D228BB23E0:7598080/cloud189")
+}
 func TestLs(t *testing.T) {
 	NewClient("").List("/demo/1/2", 1)
 }

@@ -61,6 +61,11 @@ func (client *Client) Up(cloud string, locals ...string) {
 			f.Upload()
 			continue
 		}
+		if file.IsFastFile(local) {
+			f := file.NewFastFile(dir.Id.String(), local, client)
+			f.Upload()
+			continue
+		}
 		info, err := os.Stat(local)
 		if err != nil {
 			log.Printf("open %v error %v\n", local, err)
@@ -142,6 +147,20 @@ func (client *Client) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
 				log.Fatalln("error get upload fileid")
 			}
 			file.Exists = info.FileDataExists == 1
+		})
+	case "FAST":
+		file := upload.(*file.FastFile)
+		file.Prepare.Do(func() {
+			info := client.init(file, file.ParentId())
+
+			file.SetUploadId(info.UploadFileId)
+			if file.UploadId() == "" {
+				log.Fatalln("error get upload fileid")
+			}
+			if info.FileDataExists != 1 {
+				fmt.Println("file not exists")
+				os.Exit(1)
+			}
 		})
 	case "LOCALFILE":
 		file := upload.(*file.LocalFile)
