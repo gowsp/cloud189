@@ -6,7 +6,7 @@ import (
 	"log"
 	"testing"
 
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 func TestQrCodeLogin(t *testing.T) {

@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gowsp/cloud189-cli/pkg/config"
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg/config"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 type QrCodeReq struct {
@@ -19,7 +19,7 @@ type QrCodeReq struct {
 	Encodeuuid string `json:"encodeuuid,omitempty"`
 }
 
-func (c *Content) QrLogin() *config.Config{
+func (c *Content) QrLogin() *config.Config {
 	req, _ := http.NewRequest(http.MethodGet, "https://open.e.189.cn/api/logbox/oauth2/getUUID.do", nil)
 	param := req.URL.Query()
 	param.Set("appId", c.AppKey)

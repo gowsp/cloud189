@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gowsp/cloud189-cli/pkg/file"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type folderInfo struct {

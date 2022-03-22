@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/gowsp/cloud189-cli/pkg/file"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type taskType string

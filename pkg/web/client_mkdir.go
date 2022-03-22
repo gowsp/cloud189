@@ -7,7 +7,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/gowsp/cloud189-cli/pkg/file"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 func (client *Client) Mkdir(clouds ...string) error {

@@ -1,6 +1,6 @@
 package config
 
-import "github.com/gowsp/cloud189-cli/pkg/util"
+import "github.com/gowsp/cloud189/pkg/util"
 
 type RsaConfig struct {
 	ResCode int32  `json:"res_code,omitempty"`

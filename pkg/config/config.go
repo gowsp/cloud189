@@ -7,7 +7,7 @@ import (
 	"net/http/cookiejar"
 	"os"
 
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 var config Config

@@ -1,8 +1,8 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189-cli/pkg/web"
-	"github.com/gowsp/cloud189-cli/pkg/webdav"
+	"github.com/gowsp/cloud189/pkg/web"
+	"github.com/gowsp/cloud189/pkg/webdav"
 	"github.com/spf13/cobra"
 )
 

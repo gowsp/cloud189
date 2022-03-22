@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/gowsp/cloud189-cli/pkg/config"
-	"github.com/gowsp/cloud189-cli/pkg/web"
+	"github.com/gowsp/cloud189/pkg/config"
+	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 

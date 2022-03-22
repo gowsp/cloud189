@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gowsp/cloud189-cli/pkg/file"
-	"github.com/gowsp/cloud189-cli/pkg/web"
+	"github.com/gowsp/cloud189/pkg/file"
+	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 

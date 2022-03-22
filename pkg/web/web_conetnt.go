@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"regexp"
 
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 func NewContent() *Content {

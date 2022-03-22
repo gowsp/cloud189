@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gowsp/cloud189-cli/pkg/config"
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg/config"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 var client *Client

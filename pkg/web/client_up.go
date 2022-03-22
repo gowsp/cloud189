@@ -15,9 +15,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gowsp/cloud189-cli/pkg"
-	"github.com/gowsp/cloud189-cli/pkg/file"
-	"github.com/gowsp/cloud189-cli/pkg/util"
+	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
+	"github.com/gowsp/cloud189/pkg/util"
 )
 
 type uploadResp interface {

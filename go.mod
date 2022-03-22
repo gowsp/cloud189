@@ -1,10 +1,10 @@
-module github.com/gowsp/cloud189-cli
+module github.com/gowsp/cloud189
 
-go 1.17
+go 1.18
 
 require (
-	github.com/spf13/cobra v1.2.1
-	golang.org/x/net v0.0.0-20211123203042-d83791d6bcd9
+	github.com/spf13/cobra v1.4.0
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
 )
 
 require (

@@ -6,7 +6,7 @@ import (
 	"os"
 	"sync"
 
-	"github.com/gowsp/cloud189-cli/pkg"
+	"github.com/gowsp/cloud189/pkg"
 )
 
 type MediaType int

@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189-cli/pkg/web"
+	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 

@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"sync"
 
-	"github.com/gowsp/cloud189-cli/pkg"
+	"github.com/gowsp/cloud189/pkg"
 )
 
 func IsFastFile(name string) bool {

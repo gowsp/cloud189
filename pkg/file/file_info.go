@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gowsp/cloud189-cli/pkg"
+	"github.com/gowsp/cloud189/pkg"
 )
 
 const (
