@@ -23,6 +23,10 @@ type LocalDir struct {
 	Files   map[string]*list.List
 	Dirict  *list.List
 }
+type FilePath struct {
+	FullPath string
+	FileInfo fs.FileInfo
+}
 
 func ReadDir(up string) *LocalDir {
 	d := filepath.Dir(up)

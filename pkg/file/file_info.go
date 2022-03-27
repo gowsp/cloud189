@@ -41,7 +41,7 @@ func ReadableSize(size uint64) string {
 	return fmt.Sprintf("%.2f%s", result, unit)
 }
 
-func ReadableFileInfo(info pkg.FileInfo) string {
+func ReadableFileInfo(info pkg.File) string {
 	var size string
 	if info.IsDir() {
 		size = "-"

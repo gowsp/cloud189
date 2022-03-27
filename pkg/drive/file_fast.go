@@ -1,4 +1,4 @@
-package file
+package drive
 
 import (
 	"fmt"
@@ -16,8 +16,8 @@ func IsFastFile(name string) bool {
 }
 
 type FastFile struct {
-	Prepare  sync.Once
-	client   pkg.Client
+	once     sync.Once
+	client   pkg.Uploader
 	parentId string
 	uploadId string
 	name     string
@@ -25,7 +25,7 @@ type FastFile struct {
 	size     int64
 }
 
-func NewFastFile(parentId, url string, client pkg.Client) *FastFile {
+func NewFastFile(parentId, url string, client pkg.Uploader) *FastFile {
 	reg := regexp.MustCompile(`^fast://(\w+):(\d+)/(.+)`)
 	params := reg.FindSubmatch([]byte(url))
 	size, err := strconv.ParseInt(string(params[2]), 10, 0)
@@ -44,6 +44,9 @@ func NewFastFile(parentId, url string, client pkg.Client) *FastFile {
 func (f *FastFile) Upload() {
 	f.client.Upload(f, nil)
 }
+func (f *FastFile) Prepare(init func()) {
+	f.once.Do(init)
+}
 func (f *FastFile) ParentId() string {
 	return f.parentId
 }
@@ -61,6 +64,8 @@ func (f *FastFile) FileMD5() string {
 }
 func (f *FastFile) SliceMD5() string {
 	return f.fileMd5
+}
+func (f *FastFile) SetExists(exists bool) {
 }
 func (f *FastFile) IsExists() bool {
 	return true

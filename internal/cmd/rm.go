@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189/pkg/web"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +11,8 @@ var rmCmd = &cobra.Command{
 	Short: "remove file",
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.NewClient(cfgFile).Rm(args...)
+		if err := client().Remove(args...); err != nil {
+			fmt.Println(err)
+		}
 	},
 }

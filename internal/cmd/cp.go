@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189/pkg/web"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -10,6 +11,12 @@ var cpCmd = &cobra.Command{
 	Short: "copy file",
 	Args:  cobra.MinimumNArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
-		web.NewClient(cfgFile).Cp(args...)
+		length := len(args)
+		dest := args[length-1]
+		from := args[:length-1]
+		err := client().Copy(dest, from...)
+		if err != nil {
+			fmt.Println(err)
+		}
 	},
 }

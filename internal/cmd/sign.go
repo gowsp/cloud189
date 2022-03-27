@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189/pkg/web"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -9,6 +10,8 @@ var signCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "sign",
 	Run: func(cmd *cobra.Command, args []string) {
-		web.NewClient(cfgFile).Sign()
+		if err := client().Sign(); err != nil {
+			fmt.Println(err)
+		}
 	},
 }

@@ -20,10 +20,10 @@ func (f *Cloud189FileSystem) Mkdir(ctx context.Context, name string, perm os.Fil
 }
 
 func (f *Cloud189FileSystem) OpenFile(ctx context.Context, name string, flag int, perm os.FileMode) (webdav.File, error) {
-	if flag&os.O_CREATE != 0 {
-		size := ctx.Value(FILE_SIZE).(int64)
-		return file.NewStreamFile(name, size, f.client), nil
-	}
+	// if flag&os.O_CREATE != 0 {
+	// 	size := ctx.Value(FILE_SIZE).(int64)
+	// 	return file.NewStreamFile(name, size, f.client), nil
+	// }
 	stat, err := f.client.Stat(name)
 	if err != nil {
 		return nil, err

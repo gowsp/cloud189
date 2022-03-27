@@ -18,20 +18,20 @@ func TestMkdir(t *testing.T) {
 	rootCmd.Execute()
 }
 func TestUp(t *testing.T) {
-	rootCmd.SetArgs([]string{"up", "https://github.com/gowsp/cloud189/releases/download/v0.2/cloud189_0.2_windows_amd64.zip",
-		"../../internal", "../../LICENSE", "/demo/1/2"})
+	rootCmd.SetArgs([]string{"up", "../../LICENSE", "https://github.com/gowsp/cloud189/releases/download/v0.2/cloud189_0.2_windows_amd64.zip",
+		"../../internal", "/demo/1/2"})
 	rootCmd.Execute()
 }
 func TestLs(t *testing.T) {
-	rootCmd.SetArgs([]string{"ls", "/demo/1/2"})
+	rootCmd.SetArgs([]string{"ls", "/我的图片"})
 	rootCmd.Execute()
 }
 func TestDownFile(t *testing.T) {
-	rootCmd.SetArgs([]string{"dl", "/demo", "d:/"})
+	rootCmd.SetArgs([]string{"dl", "/demo1", "/home/wuzk/data/tmp/"})
 	rootCmd.Execute()
 }
 func TestDownDir(t *testing.T) {
-	rootCmd.SetArgs([]string{"dl", "/demo/", "d:/"})
+	rootCmd.SetArgs([]string{"dl", "/demo1/", "d:/"})
 	rootCmd.Execute()
 }
 func TestCp(t *testing.T) {

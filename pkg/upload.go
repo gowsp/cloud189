@@ -3,6 +3,7 @@ package pkg
 import "io"
 
 type UploadFile interface {
+	Prepare(init func())
 	ParentId() string
 	Name() string
 	Size() int64
@@ -13,11 +14,13 @@ type UploadFile interface {
 	Type() string
 	IsComplete() bool
 	UploadId() string
+	SetExists(exists bool)
+	SetUploadId(uploadId string)
 }
 
 type UploadPart interface {
-	Name() string
 	Num() int
+	Name() string
 	Data() io.Reader
 }
 

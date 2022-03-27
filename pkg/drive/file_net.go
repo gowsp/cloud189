@@ -1,8 +1,8 @@
-package file
+package drive
 
 import (
+	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"path"
@@ -18,25 +18,25 @@ func IsNetFile(name string) bool {
 }
 
 type NetFile struct {
-	client   pkg.Client
+	client   pkg.Uploader
 	parentId string
 	url      string
 }
 
-func NewNetFile(parentId, url string, client pkg.Client) *NetFile {
+func NewNetFile(parentId, url string, client pkg.Uploader) *NetFile {
 	return &NetFile{parentId: parentId, url: url, client: client}
 }
 
 func (f *NetFile) Upload() {
 	resp, err := http.DefaultClient.Get(f.url)
 	if err != nil {
-		log.Println(err)
+		fmt.Println(err)
 		return
 	}
 	defer resp.Body.Close()
 	size := resp.ContentLength
 	if size < 1 {
-		log.Println("not found content, skip")
+		fmt.Println("not found content, skip")
 		return
 	}
 	var name string
@@ -49,4 +49,5 @@ func (f *NetFile) Upload() {
 	}
 	sf := NewStreamFileWithParent(name, f.parentId, size, f.client)
 	io.Copy(sf, resp.Body)
+	resp.Body.Close()
 }

@@ -1,4 +1,4 @@
-package file
+package drive
 
 import (
 	"bufio"
@@ -17,9 +17,9 @@ import (
 )
 
 type LocalFile struct {
-	Prepare  sync.Once
+	once     sync.Once
 	Exists   bool
-	client   pkg.Client
+	client   pkg.Uploader
 	parentId string
 	uploadId string
 	path     string
@@ -35,7 +35,7 @@ type FilePath struct {
 	FileInfo fs.FileInfo
 }
 
-func NewLocalFile(parentId string, path *FilePath, client pkg.Client) *LocalFile {
+func NewLocalFile(parentId string, path *FilePath, client pkg.Uploader) *LocalFile {
 	size := path.FileInfo.Size()
 	sliceNum := int(math.Ceil(float64(size) / float64(Slice)))
 	return &LocalFile{
@@ -46,6 +46,9 @@ func NewLocalFile(parentId string, path *FilePath, client pkg.Client) *LocalFile
 		sliceNum: sliceNum,
 		partName: make([]string, sliceNum),
 	}
+}
+func (f *LocalFile) Prepare(init func()) {
+	f.once.Do(init)
 }
 func (f *LocalFile) Upload() {
 	file, err := os.Open(f.path)
@@ -69,6 +72,9 @@ func (f *LocalFile) Upload() {
 }
 func (f *LocalFile) SetUploadId(uploadId string) {
 	f.uploadId = uploadId
+}
+func (f *LocalFile) SetExists(exists bool) {
+	f.Exists = exists
 }
 func (f *LocalFile) Type() string {
 	return "LOCALFILE"

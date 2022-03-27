@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/drive"
+	"github.com/gowsp/cloud189/pkg/web-api"
 	"github.com/spf13/cobra"
 )
 
@@ -37,4 +40,9 @@ func init() {
 	rootCmd.AddCommand(cpCmd)
 	rootCmd.AddCommand(dfCmd)
 	rootCmd.AddCommand(webdavCmd)
+}
+
+func client() pkg.App {
+	api := web.NewClient(cfgFile)
+	return drive.NewClient(api)
 }

@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"github.com/gowsp/cloud189/pkg/web"
+	"log"
+
 	"github.com/spf13/cobra"
 )
 
@@ -13,6 +14,9 @@ var dlCmd = &cobra.Command{
 		length := len(args)
 		clouds := args[:length-1]
 		local := args[length-1]
-		web.NewClient(cfgFile).Dl(local, clouds...)
+		err := client().Download(local, clouds...)
+		if err != nil {
+			log.Println(err)
+		}
 	},
 }

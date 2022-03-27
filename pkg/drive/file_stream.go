@@ -1,4 +1,4 @@
-package file
+package drive
 
 import (
 	"bytes"
@@ -17,16 +17,7 @@ import (
 	"golang.org/x/net/webdav"
 )
 
-func NewStreamFile(name string, size int64, client pkg.Client) webdav.File {
-	dir := path.Dir(name)
-	parent, err := client.Stat(dir)
-	if err != nil {
-		return nil
-	}
-	return NewStreamFileWithParent(name, parent.Id(), size, client)
-}
-
-func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Client) webdav.File {
+func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Uploader) webdav.File {
 	buffSize := Slice
 	if size < Slice {
 		buffSize = int(size)
@@ -48,9 +39,9 @@ func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Clien
 }
 
 type StreamFile struct {
-	Prepare  sync.Once
+	once     sync.Once
 	Exists   bool
-	client   pkg.Client
+	client   pkg.Uploader
 	parentId string
 	name     string
 	size     int64
@@ -80,6 +71,12 @@ func (f *StreamFile) UploadId() string {
 }
 func (f *StreamFile) SetUploadId(fileId string) {
 	f.fileId = fileId
+}
+func (f *StreamFile) Prepare(init func()) {
+	f.once.Do(func() {})
+}
+func (f *StreamFile) SetExists(exists bool) {
+	f.Exists = exists
 }
 func (f *StreamFile) Name() string {
 	return path.Base(f.name)
@@ -154,7 +151,7 @@ func (f *StreamFile) Readdir(count int) ([]fs.FileInfo, error) {
 	return make([]fs.FileInfo, 0), nil
 }
 func (f *StreamFile) Stat() (fs.FileInfo, error) {
-	return &FileInfo{MD5: f.FileMD5()}, nil
+	return nil, nil
 }
 func (f *StreamFile) Close() error {
 	return nil

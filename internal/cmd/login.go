@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 
-	"github.com/gowsp/cloud189/pkg/config"
-	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 
@@ -20,15 +19,10 @@ var loginCmd = &cobra.Command{
 		return nil
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		config.InitConfigFile(cfgFile)
-		var config *config.Config
 		if UsePwd {
-			config = web.NewContent().PwdLogin(args[0], args[1])
-		} else {
-			config = web.NewContent().QrLogin()
-		}
-		if config != nil {
-			config.Save()
+			if err := client().Login(args[0], args[1]); err != nil {
+				log.Println(err)
+			}
 		}
 	},
 }
