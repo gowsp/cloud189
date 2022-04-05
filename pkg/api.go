@@ -39,8 +39,6 @@ type Api interface {
 
 	ListFile(id string) ([]File, error)
 
-	ListDir(id string) ([]File, error)
-
 	Mkdir(parentId, path string, parents bool) error
 
 	Mkdirs(parentId string, path ...string) (map[string]interface{}, error)
@@ -71,7 +69,7 @@ type App interface {
 
 	List(file File) ([]File, error)
 
-	ListDir(name string) ([]File, error)
+	ListBy(name string) ([]File, error)
 
 	Mkdir(path string, parents bool) error
 

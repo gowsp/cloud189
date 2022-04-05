@@ -26,22 +26,13 @@ var lsCmd = &cobra.Command{
 			name = args[0]
 		}
 		client := App()
-		info, err := client.Stat(name)
+		files, err := client.ListBy(name)
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		if info.IsDir() {
-			files, err := client.List(info)
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			for _, v := range files {
-				fmt.Println(file.ReadableFileInfo(v))
-			}
-			return
+		for _, v := range files {
+			fmt.Println(file.ReadableFileInfo(v))
 		}
-		fmt.Println(file.ReadableFileInfo(info))
 	},
 }

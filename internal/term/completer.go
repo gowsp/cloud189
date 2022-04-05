@@ -24,7 +24,7 @@ func completer(line string) (c []string) {
 	arg := args[len-1]
 	dir, n := path.Split(arg)
 	name := session.Join(dir)
-	files, err := cmd.App().ListDir(name)
+	files, err := cmd.App().ListBy(name)
 	if err != nil {
 		return
 	}

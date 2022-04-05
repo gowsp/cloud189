@@ -52,12 +52,17 @@ func (f *Client) List(file pkg.File) ([]pkg.File, error) {
 	}
 	return nil, os.ErrInvalid
 }
-func (f *Client) ListDir(name string) ([]pkg.File, error) {
-	stat, err := f.Stat(name)
+func (f *Client) ListBy(name string) ([]pkg.File, error) {
+	info, err := f.Stat(name)
 	if err != nil {
 		return nil, err
 	}
-	return f.api.ListDir(stat.Id())
+	if info.IsDir() {
+		return f.api.ListFile(info.Id())
+	}
+	result := make([]pkg.File, 1)
+	result[0] = info
+	return result, nil
 }
 func (f *Client) Mkdir(name string, parents bool) error {
 	if parents {
