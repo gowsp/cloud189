@@ -5,26 +5,32 @@ import (
 	"os"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/cache"
 )
 
-func (c *Api) Rename(src pkg.File, dest string) error {
+func (c *api) Rename(src pkg.File, dest string) (err error) {
 	if src == nil {
 		return os.ErrNotExist
 	}
+
 	if src.IsDir() {
-		return c.renameFoler(src.Id(), dest)
+		err = c.renameFoler(src.Id(), dest)
 	} else {
-		return c.renameFile(src.Id(), dest)
+		err = c.renameFile(src.Id(), dest)
 	}
+	if err == nil {
+		cache.Invalid(src)
+	}
+	return
 }
-func (c *Api) renameFile(id, dest string) error {
+func (c *api) renameFile(id, dest string) error {
 	params := make(url.Values)
 	params.Set("fileId", id)
 	params.Set("destFileName", dest)
 	var f map[string]interface{}
 	return c.invoker.Post("/open/file/renameFile.action", params, &f)
 }
-func (c *Api) renameFoler(id, dest string) error {
+func (c *api) renameFoler(id, dest string) error {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("destFolderName", dest)

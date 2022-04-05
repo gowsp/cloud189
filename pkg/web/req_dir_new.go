@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/url"
 	"path"
+
+	"github.com/gowsp/cloud189/pkg/cache"
 )
 
 type mkdirs struct {
@@ -15,14 +17,14 @@ type response struct {
 	Msg  string `json:"res_message,omitempty"`
 }
 
-func (c *Api) Mkdir(parentId, path string, parents bool) error {
+func (c *api) Mkdir(parentId, path string, parents bool) error {
 	if parents {
 		_, err := c.Mkdirs(parentId, path)
 		return err
 	}
 	return c.mkdir(parentId, path)
 }
-func (c *Api) Mkdirs(parentId string, dirs ...string) (map[string]interface{}, error) {
+func (c *api) Mkdirs(parentId string, dirs ...string) (map[string]interface{}, error) {
 	length := len(dirs)
 	if length == 0 {
 		return make(map[string]interface{}), nil
@@ -44,15 +46,17 @@ func (c *Api) Mkdirs(parentId string, dirs ...string) (map[string]interface{}, e
 	params := url.Values{"folderList": {string(val)}, "opScene": {"1"}}
 	err = c.invoker.Post("/portal/createFolders.action", params, &result)
 	if err == nil && result["res_code"].(float64) == 0 {
+		cache.InvalidId(parentId)
 		return result, nil
 	}
 	return result, err
 }
-func (c *Api) mkdir(parentId, name string) error {
+func (c *api) mkdir(parentId, name string) error {
 	var result map[string]interface{}
 	params := url.Values{"folderName": {name}, "parentFolderId": {parentId}}
 	err := c.invoker.Post("/open/file/createFolder.action", params, &result)
 	if err == nil && result["res_code"].(float64) == 0 {
+		cache.InvalidId(parentId)
 		return nil
 	}
 	return err

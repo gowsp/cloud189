@@ -14,15 +14,15 @@ import (
 	"github.com/gowsp/cloud189/pkg/util"
 )
 
-type Uploader struct {
-	api *Api
+type uploader struct {
+	api *api
 }
 
 type briefInfo struct {
 	SessionKey string `json:"sessionKey,omitempty"`
 }
 
-func (i *Api) session() string {
+func (i *api) session() string {
 	if i.sessionKey != "" {
 		return i.sessionKey
 	}
@@ -31,7 +31,7 @@ func (i *Api) session() string {
 	i.sessionKey = user.SessionKey
 	return i.sessionKey
 }
-func (i *Api) rsa() *drive.RsaConfig {
+func (i *api) rsa() *drive.RsaConfig {
 	rsa := i.conf.RSA
 	if rsa.Expire > time.Now().UnixMilli() {
 		return &rsa
@@ -46,7 +46,7 @@ type uploadResp interface {
 	GetCode() string
 }
 
-func (uploader *Api) do(u string, f url.Values, result uploadResp) error {
+func (uploader *api) do(u string, f url.Values, result uploadResp) error {
 	c := strconv.FormatInt(time.Now().UnixMilli(), 10)
 	r := util.Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
 	l := util.Random("xxxxxxxxxxxx4xxxyxxxxxxxxxxxxxxx")

@@ -13,7 +13,7 @@ type cache struct {
 	nodes sync.Map
 }
 
-func Entry(id string) *DirEntry {
+func entry(id string) *DirEntry {
 	if val, ok := Cache.nodes.Load(id); ok {
 		return val.(*DirEntry)
 	}
@@ -25,36 +25,38 @@ func Entry(id string) *DirEntry {
 	return nil
 }
 
-func List[F pkg.File](parentId string, cached Cached, loader func() ([]F, error)) ([]pkg.File, error) {
-	parent := Entry(parentId)
-	if cached(parent) {
+func List[F pkg.File](parentId string, loader func() ([]F, error)) ([]pkg.File, error) {
+	parent := entry(parentId)
+	if parent.valid() {
 		return parent.Files(), nil
+	}
+	parent.clean()
+	files, err := loader()
+	if err != nil {
+		return nil, err
+	}
+	addAll(parent, files)
+	parent.enable()
+	return parent.Files(), nil
+}
+func Find[F pkg.File](parentId, name string, loader func() ([]F, error)) (pkg.File, error) {
+	parent := entry(parentId)
+	if val, err := parent.load(name); err == nil {
+		return val, nil
 	}
 	files, err := loader()
 	if err != nil {
 		return nil, err
 	}
-	parent.clean()
 	addAll(parent, files)
-	return parent.Files(), nil
-}
-func Load(parentId, name string, loader func() error) (pkg.File, error) {
-	parent := Entry(parentId)
-	if val, err := parent.load(name); err == nil {
-		return val, nil
-	}
-	err := loader()
-	if err != nil {
-		return nil, err
-	}
 	return parent.load(name)
 }
 func addAll[F pkg.File](parent *DirEntry, files []F) {
 	for _, file := range files {
-		AddFile(parent, file)
+		addFile(parent, file)
 	}
 }
-func AddFile[F pkg.File](parent *DirEntry, file F) {
+func addFile[F pkg.File](parent *DirEntry, file F) {
 	if !file.IsDir() {
 		parent.files.Store(file.Name(), file)
 		return
@@ -70,18 +72,32 @@ func AddFile[F pkg.File](parent *DirEntry, file F) {
 
 func Delete(files ...pkg.File) {
 	for _, file := range files {
-		if !file.IsDir() {
-			continue
-		}
-		if node, ok := Cache.nodes.Load(file.Id()); ok {
-			remove(node.(*DirEntry))
+		if node, ok := Cache.nodes.Load(file.PId()); ok {
+			if file.IsDir() {
+				if node, ok := Cache.nodes.Load(file.Id()); ok {
+					delete(node.(*DirEntry))
+				}
+			}
+			node.(*DirEntry).remove(file)
 		}
 	}
 }
-func remove(entry *DirEntry) {
+func delete(entry *DirEntry) {
 	Cache.nodes.Delete(entry.Info.Id())
 	entry.dirs.Range(func(key, value interface{}) bool {
-		remove(value.(*DirEntry))
+		delete(value.(*DirEntry))
 		return true
 	})
+}
+func Invalid(files ...pkg.File) {
+	for _, file := range files {
+		if node, ok := Cache.nodes.Load(file.PId()); ok {
+			node.(*DirEntry).remove(file)
+		}
+	}
+}
+func InvalidId(id string) {
+	if node, ok := Cache.nodes.Load(id); ok {
+		node.(*DirEntry).invalid()
+	}
 }

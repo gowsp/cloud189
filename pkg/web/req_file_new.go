@@ -10,10 +10,11 @@ import (
 	"strings"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/cache"
 	"github.com/gowsp/cloud189/pkg/file"
 )
 
-func (client *Api) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
+func (client *api) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
 	upload.Prepare(func() {
 		client.init(upload, upload.ParentId())
 	})
@@ -47,7 +48,7 @@ func (r *initResp) GetCode() string {
 	return r.Code
 }
 
-func (c *Api) init(i pkg.UploadFile, parentId string) error {
+func (c *api) init(i pkg.UploadFile, parentId string) error {
 	params := make(url.Values)
 	params.Set("parentFolderId", parentId)
 	params.Set("fileName", i.Name())
@@ -70,7 +71,7 @@ func (c *Api) init(i pkg.UploadFile, parentId string) error {
 	i.SetExists(upload.Data.FileDataExists == 1)
 	return nil
 }
-func (client *Api) check(i pkg.UploadFile, fileId string) error {
+func (client *api) check(i pkg.UploadFile, fileId string) error {
 	var upload initResp
 	params := make(url.Values)
 	params.Set("fileMd5", i.FileMD5())
@@ -98,7 +99,7 @@ type uploadUrls struct {
 	RequestHeader string `json:"requestHeader,omitempty"`
 }
 
-func (client *Api) UploadPart(part pkg.UploadPart, fileId string) error {
+func (client *api) UploadPart(part pkg.UploadPart, fileId string) error {
 	p := make(url.Values)
 	num := strconv.Itoa(part.Num() + 1)
 	p.Set("partInfo", fmt.Sprintf("%s-%s", num, part.Name()))
@@ -130,16 +131,16 @@ func (client *Api) UploadPart(part pkg.UploadPart, fileId string) error {
 	return nil
 }
 
-type UploadResult struct {
+type uploadResult struct {
 	Code string       `json:"code,omitempty"`
-	File UploadDetail `json:"file,omitempty"`
+	File uploadDetail `json:"file,omitempty"`
 }
 
-func (r *UploadResult) GetCode() string {
+func (r *uploadResult) GetCode() string {
 	return r.Code
 }
 
-type UploadDetail struct {
+type uploadDetail struct {
 	Id         string `json:"userFileId,omitempty"`
 	FileSize   int64  `json:"file_size,omitempty"`
 	FileName   string `json:"file_name,omitempty"`
@@ -147,8 +148,8 @@ type UploadDetail struct {
 	CreateDate string `json:"create_date,omitempty"`
 }
 
-func (client *Api) commit(i pkg.UploadFile, fileId, lazyCheck string) error {
-	var result UploadResult
+func (client *api) commit(i pkg.UploadFile, fileId, lazyCheck string) error {
+	var result uploadResult
 	params := make(url.Values)
 	params.Set("fileMd5", i.FileMD5())
 	params.Set("sliceMd5", i.SliceMD5())
@@ -158,5 +159,8 @@ func (client *Api) commit(i pkg.UploadFile, fileId, lazyCheck string) error {
 		params.Set("opertype", "3")
 	}
 	err := client.do("/person/commitMultiUploadFile", params, &result)
+	if err == nil {
+		cache.InvalidId(i.ParentId())
+	}
 	return err
 }

@@ -21,12 +21,12 @@ type invoker struct {
 	conf *drive.Config
 }
 
-const COOKIE_USER = "COOKIE_LOGIN_USER"
+const user = "COOKIE_LOGIN_USER"
 
 func newInvoker(conf *drive.Config) *invoker {
 	jar, _ := cookiejar.New(nil)
 	sson := []*http.Cookie{{Name: "SSON", Value: conf.SSON}}
-	user := []*http.Cookie{{Name: COOKIE_USER, Value: conf.Auth}}
+	user := []*http.Cookie{{Name: user, Value: conf.Auth}}
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "e.189.cn"}, sson)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
@@ -42,13 +42,13 @@ func (i *invoker) refresh() error {
 	}
 	defer resp.Body.Close()
 	cookies := i.http.Jar.Cookies(resp.Request.URL)
-	user := util.FindCookie(cookies, COOKIE_USER)
+	user := util.FindCookie(cookies, user)
 	if user != nil {
 		i.conf.Auth = user.Value
 		i.conf.Save()
 		return nil
 	}
-	return i.Login(LoginContent(resp, i.conf.User))
+	return i.Login(login(resp, i.conf.User))
 }
 
 func (i *invoker) Do(req *http.Request, data interface{}, retry int) error {
@@ -95,7 +95,7 @@ func (i *invoker) Post(path string, params url.Values, data interface{}) error {
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	return i.Do(req, data, 3)
 }
-func (i *invoker) Login(ctx *Content) error {
+func (i *invoker) Login(ctx *content) error {
 	req := ctx.toRequest()
 	resp, _ := i.http.Do(req)
 	var result pwdLoginResult

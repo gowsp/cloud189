@@ -12,9 +12,9 @@ import (
 type taskType string
 
 const (
-	COPY   taskType = "COPY"
-	MOVE   taskType = "MOVE"
-	DELETE taskType = "DELETE"
+	copy   taskType = "COPY"
+	move   taskType = "MOVE"
+	delete taskType = "DELETE"
 )
 
 type taskInfo struct {
@@ -32,17 +32,17 @@ func (t *taskInfo) MarshalJSON() ([]byte, error) {
 	return []byte(json), nil
 }
 
-func (c *Api) Copy(target string, files ...pkg.File) error {
-	return c.createTask(COPY, target, files...)
+func (c *api) Copy(target string, files ...pkg.File) error {
+	return c.createTask(copy, target, files...)
 }
-func (c *Api) Move(target string, files ...pkg.File) error {
-	return c.createTask(MOVE, target, files...)
+func (c *api) Move(target string, files ...pkg.File) error {
+	return c.createTask(move, target, files...)
 }
-func (c *Api) Delete(files ...pkg.File) error {
-	return c.createTask(DELETE, "", files...)
+func (c *api) Delete(files ...pkg.File) error {
+	return c.createTask(delete, "", files...)
 }
 
-func (c *Api) createTask(taskType taskType, targetFolderId string, files ...pkg.File) error {
+func (c *api) createTask(taskType taskType, targetFolderId string, files ...pkg.File) error {
 	length := len(files)
 	if length == 0 {
 		return nil
@@ -64,7 +64,13 @@ func (c *Api) createTask(taskType taskType, targetFolderId string, files ...pkg.
 	if err != nil {
 		return err
 	}
-	if taskType == DELETE {
+	switch taskType {
+	case copy:
+		cache.InvalidId(targetFolderId)
+	case move:
+		cache.Invalid(files...)
+		cache.InvalidId(targetFolderId)
+	case delete:
 		cache.Delete(files...)
 	}
 	return nil

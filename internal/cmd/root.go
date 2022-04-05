@@ -50,7 +50,8 @@ var once sync.Once
 
 func App() pkg.App {
 	once.Do(func() {
-		api := web.NewClient(cfgFile)
+		// web.Api
+		api := web.NewApi(cfgFile)
 		app = drive.NewClient(api)
 	})
 	return app

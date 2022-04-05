@@ -22,11 +22,11 @@ type searchResp struct {
 }
 
 type fileResp struct {
+	IsFolder    bool
 	ParentId    json.Number
 	FileId      json.Number `json:"id,omitempty"`
 	FileName    string      `json:"name,omitempty"`
 	FileSize    int64       `json:"size,omitempty"`
-	IsFolder    bool        `json:"isFolder,omitempty"`
 	MD5         string      `json:"md5,omitempty"`
 	FileModTime string      `json:"lastOpTime,omitempty"`
 }
@@ -46,30 +46,30 @@ func (f *fileResp) ContentType(ctx context.Context) (string, error) {
 	return path.Ext(f.Name()), nil
 }
 func (f *fileResp) ETag(ctx context.Context) (string, error) {
-	return strconv.FormatInt(f.ModTime().Unix(), 10), nil
+	return strconv.FormatInt(f.ModTime().UnixMilli(), 10), nil
 }
 
-func (c *Api) Find(id, name string) (pkg.File, error) {
+func (c *api) Find(id, name string) (pkg.File, error) {
 	if file.IsSystem(id, name) {
 		return c.FindDir(id, name)
 	}
 	return c.FindFile(id, name)
 }
 
-func (c *Api) FindDir(id, name string) (pkg.File, error) {
-	return cache.Load(id, name, func() error {
-		_, err := c.ListDir(id)
-		return err
+func (c *api) FindDir(id, name string) (pkg.File, error) {
+	return cache.Find(id, name, func() ([]*folder, error) {
+		return c.ListDir(id)
 	})
 }
-func (c *Api) FindFile(id, name string) (pkg.File, error) {
-	return cache.Load(id, name, func() error {
-		err := c.search(id, name, 1)
-		return err
+func (c *api) FindFile(id, name string) (pkg.File, error) {
+	return cache.Find(id, name, func() ([]*fileResp, error) {
+		var files searchResp
+		err := c.search(&files, id, name, 1)
+		return append(files.Folders, files.Files...), err
 	})
 }
 
-func (c *Api) search(id, name string, page int) error {
+func (c *api) search(result *searchResp, id, name string, page int) error {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("pageNum", strconv.Itoa(page))
@@ -84,17 +84,15 @@ func (c *Api) search(id, name string, page int) error {
 	if err != nil {
 		return err
 	}
-	parent := cache.Entry(id)
-	for _, f := range files.Files {
-		f.ParentId = json.Number(id)
-		cache.AddFile(parent, f)
-	}
 	for _, f := range files.Folders {
 		f.IsFolder = true
-		cache.AddFile(parent, f)
+	}
+	parent := json.Number(id)
+	for _, f := range files.Files {
+		f.ParentId = parent
 	}
 	if page*100 < files.Count {
-		return c.search(id, name, page+1)
+		return c.search(result, id, name, page+1)
 	}
-	return err
+	return os.ErrNotExist
 }

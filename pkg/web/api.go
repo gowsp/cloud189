@@ -61,19 +61,20 @@ import "github.com/gowsp/cloud189/pkg/drive"
 // photoList: "".concat(r.apiBaseUrl, "/elastic/listPhotoFile.action"),
 // getPhotoOpenLog: "".concat(r.apiBaseUrl, "/photo/getPhotoOpenLog.action"),
 // getNewVlcVideoPlayUrl: "".concat(r.apiBaseUrl, "/portal/getNewVlcVideoPlayUrl.action")
-type Api struct {
+type api struct {
 	invoker    *invoker
 	sessionKey string
 	conf       *drive.Config
 }
 
-func NewClient(path string) *Api {
+func NewApi(path string) *api {
 	conf, _ := drive.OpenConfig(path)
 	i := newInvoker(conf)
-	return &Api{invoker: i, conf: conf}
+	return &api{invoker: i, conf: conf}
 }
 
-func NewApi(conf *drive.Config) *Api {
+func NewMemApi(username, password string) *api {
+	conf := &drive.Config{User: drive.User{Name: username, Password: password}}
 	i := newInvoker(conf)
-	return &Api{invoker: i, conf: conf}
+	return &api{invoker: i, conf: conf}
 }

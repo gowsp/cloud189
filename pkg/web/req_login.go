@@ -13,15 +13,15 @@ import (
 	"github.com/gowsp/cloud189/pkg/util"
 )
 
-func LoginContent(resp *http.Response, user drive.User) *Content {
+func login(resp *http.Response, user drive.User) *content {
 	data, _ := io.ReadAll(resp.Body)
 	location := resp.Request.Response.Header.Get("location")
-	content := Content{user: user, data: data, Referer: location}
+	content := content{user: user, data: data, Referer: location}
 	content.parse()
 	return &content
 }
 
-type Content struct {
+type content struct {
 	user        drive.User
 	Referer     string
 	RsaKey      string
@@ -37,7 +37,7 @@ type Content struct {
 	Lt          string
 }
 
-func (c *Content) parse() {
+func (c *content) parse() {
 	c.AppKey = c.read("appKey = '(\\w+)'")
 	c.ReqId = c.read("reqId = \"(\\w+)\"")
 	c.RsaKey = c.read("\"j_rsaKey\" value=\"(.+)\"")
@@ -49,12 +49,12 @@ func (c *Content) parse() {
 	c.ReturnUrl = c.read("returnUrl = '(.+)'")
 	c.Lt = c.read("lt = \"(\\w+)\"")
 }
-func (c *Content) read(str string) string {
+func (c *content) read(str string) string {
 	reg := regexp.MustCompile(str)
 	paramId := reg.FindSubmatch(c.data)
 	return string(paramId[1])
 }
-func (ctx *Content) toRequest() *http.Request {
+func (ctx *content) toRequest() *http.Request {
 	user := ctx.user
 	key := util.Key(ctx.RsaKey)
 	data, _ := util.RsaEncrypt(key, []byte(user.Name))
@@ -90,7 +90,7 @@ type pwdLoginResult struct {
 	Msg    string `json:"msg,omitempty"`
 }
 
-func (c *Api) Login(name, password string) error {
+func (c *api) Login(name, password string) error {
 	user := drive.User{Name: name, Password: password}
 	req, _ := http.NewRequest(http.MethodGet, "https://cloud.189.cn/api/portal/loginUrl.action", nil)
 	resp, err := http.DefaultClient.Do(req)
@@ -98,6 +98,6 @@ func (c *Api) Login(name, password string) error {
 		log.Fatalln(err)
 	}
 	defer resp.Body.Close()
-	ctx := LoginContent(resp, user)
+	ctx := login(resp, user)
 	return c.invoker.Login(ctx)
 }

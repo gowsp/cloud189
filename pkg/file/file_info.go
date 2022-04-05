@@ -55,3 +55,5 @@ func ReadableFileInfo(info pkg.File) string {
 	modTime := info.ModTime().Format("2006-01-02 15:04:05")
 	return fmt.Sprintf("%-10s%-22s%s", size, modTime, info.Name())
 }
+
+

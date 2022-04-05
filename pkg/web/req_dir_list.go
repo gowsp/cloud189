@@ -5,10 +5,6 @@ import (
 	"net/url"
 	"os"
 	"time"
-
-	"github.com/gowsp/cloud189/pkg"
-	"github.com/gowsp/cloud189/pkg/cache"
-	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type folder struct {
@@ -26,27 +22,13 @@ func (f *folder) ModTime() time.Time { return time.Now() }
 func (f *folder) IsDir() bool        { return true }
 func (f *folder) Sys() any           { return nil }
 
-func (c *Api) cached(entry *cache.DirEntry) bool {
-	info := entry.Info
-	if file.IsSystemDir(info) {
-		return false
-	}
-	detail, err := c.Detail(info.Id())
-	if err != nil {
-		return false
-	}
-	entry.Info = detail
-	return detail.ModTime().Equal(info.ModTime()) && entry.Init
-}
-func (c *Api) ListDir(id string) ([]pkg.File, error) {
-	return cache.List(id, c.cached, func() ([]*folder, error) {
-		params := make(url.Values)
-		params.Set("id", id)
-		params.Set("orderBy", "1")
-		params.Set("order", "ASC")
+func (c *api) ListDir(id string) ([]*folder, error) {
+	params := make(url.Values)
+	params.Set("id", id)
+	params.Set("orderBy", "1")
+	params.Set("order", "ASC")
 
-		var folders []*folder
-		err := c.invoker.Post("/portal/getObjectFolderNodes.action", params, &folders)
-		return folders, err
-	})
+	var folders []*folder
+	err := c.invoker.Post("/portal/getObjectFolderNodes.action", params, &folders)
+	return folders, err
 }

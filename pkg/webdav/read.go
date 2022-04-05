@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 	"golang.org/x/net/webdav"
 )
 
@@ -42,18 +43,9 @@ func (r *read) Read(p []byte) (n int, err error)             { return r.getTemp(
 func (r *read) Write(p []byte) (n int, err error)            { return r.getTemp().Write(p) }
 func (r *read) Close() error                                 { return nil }
 func (r *read) Readdir(count int) ([]fs.FileInfo, error) {
-	if !r.stat.IsDir() {
-		return nil, os.ErrInvalid
-	}
-	file, err := r.app.List(r.stat)
-	if err != nil {
-		return nil, err
-	}
-	infos := make([]fs.FileInfo, 0)
-	for _, v := range file {
-		infos = append(infos, v)
-	}
-	return infos, nil
+	return file.Convert(func() ([]pkg.File, error) {
+		return r.app.List(r.stat)
+	})
 }
 func (r *read) Stat() (info fs.FileInfo, err error) {
 	return r.stat, err

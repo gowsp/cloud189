@@ -31,7 +31,7 @@ func (p *put) open(client pkg.App, name string, flag int) (webdav.File, error) {
 
 func prepare(req *http.Request) *http.Request {
 	switch req.Method {
-	case http.MethodPut:
+	case http.MethodPut, "LOCK":
 		req = newContext(req, &put{
 			length: req.ContentLength,
 		})
