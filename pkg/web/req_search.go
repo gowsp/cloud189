@@ -1,13 +1,17 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"time"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/cache"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type searchResp struct {
@@ -36,34 +40,36 @@ func (f *fileResp) ModTime() time.Time {
 	t, _ := time.Parse("2006-01-02 15:04:05", f.FileModTime)
 	return t
 }
-
 func (f *fileResp) IsDir() bool      { return f.IsFolder }
 func (f *fileResp) Sys() interface{} { return nil }
+func (f *fileResp) ContentType(ctx context.Context) (string, error) {
+	return path.Ext(f.Name()), nil
+}
+func (f *fileResp) ETag(ctx context.Context) (string, error) {
+	return strconv.FormatInt(f.ModTime().Unix(), 10), nil
+}
 
 func (c *Api) Find(id, name string) (pkg.File, error) {
-	return c.searchByName(id, name, 1, func(sr *searchResp) []*fileResp {
-		sr.Folders = append(sr.Folders, sr.Files...)
-		return sr.Folders
-	})
+	if file.IsSystem(id, name) {
+		return c.FindDir(id, name)
+	}
+	return c.FindFile(id, name)
 }
 
 func (c *Api) FindDir(id, name string) (pkg.File, error) {
-	files, err := c.ListDir(id)
-	if err != nil {
-		return nil, err
-	}
-	for _, f := range files {
-		if f.Name() == name {
-			return f, nil
-		}
-	}
-	return nil, os.ErrNotExist
+	return cache.Load(id, name, func() error {
+		_, err := c.ListDir(id)
+		return err
+	})
+}
+func (c *Api) FindFile(id, name string) (pkg.File, error) {
+	return cache.Load(id, name, func() error {
+		err := c.search(id, name, 1)
+		return err
+	})
 }
 
-func (c *Api) FindFile(id, name string) (pkg.File, error) {
-	return c.searchByName(id, name, 1, func(sr *searchResp) []*fileResp { return sr.Files })
-}
-func (c *Api) search(id, name string, page int) (*searchResp, error) {
+func (c *Api) search(id, name string, page int) error {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("pageNum", strconv.Itoa(page))
@@ -75,37 +81,20 @@ func (c *Api) search(id, name string, page int) (*searchResp, error) {
 	params.Set("orderBy", "lastOpTime")
 	var files searchResp
 	err := c.invoker.Get("/open/file/searchFiles.action", params, &files)
+	if err != nil {
+		return err
+	}
+	parent := cache.Entry(id)
 	for _, f := range files.Files {
 		f.ParentId = json.Number(id)
+		cache.AddFile(parent, f)
 	}
 	for _, f := range files.Folders {
 		f.IsFolder = true
-	}
-	return &files, err
-}
-
-func (c *Api) searchByName(id, name string, page int,
-	filter func(*searchResp) []*fileResp) (pkg.File, error) {
-	if id == pkg.Root.Id() {
-		if val, ok := pkg.System[name]; ok {
-			return &pkg.SysFolder{
-				FileId:   json.Number(val),
-				ParentId: pkg.Root.Id(),
-				FileName: name}, nil
-		}
-	}
-	files, err := c.search(id, name, page)
-	if err != nil {
-		return nil, err
-	}
-	data := filter(files)
-	for _, f := range data {
-		if f.Name() == name {
-			return f, nil
-		}
+		cache.AddFile(parent, f)
 	}
 	if page*100 < files.Count {
-		return c.searchByName(id, name, page+1, filter)
+		return c.search(id, name, page+1)
 	}
-	return nil, os.ErrNotExist
+	return err
 }

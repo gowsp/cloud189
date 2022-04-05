@@ -27,7 +27,7 @@ func (i *Api) session() string {
 		return i.sessionKey
 	}
 	var user briefInfo
-	i.invoker.Get("/portal/v2/getUserBriefInfo.action", url.Values{}, &user)
+	i.invoker.Get("/portal/v2/getUserBriefInfo.action", nil, &user)
 	i.sessionKey = user.SessionKey
 	return i.sessionKey
 }
@@ -86,6 +86,10 @@ func (uploader *Api) do(u string, f url.Values, result uploadResp) error {
 	case "SUCCESS":
 		return nil
 	case "InvalidSessionKey":
+		uploader.invoker.refresh()
+		uploader.sessionKey = ""
+		return uploader.do(u, f, result)
+	case "InvalidSignature":
 		uploader.invoker.refresh()
 		uploader.sessionKey = ""
 		return uploader.do(u, f, result)

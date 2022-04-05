@@ -4,14 +4,13 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strconv"
 	"strings"
 
 	"github.com/gowsp/cloud189/pkg"
-	"github.com/gowsp/cloud189/pkg/drive"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 func (client *Api) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
@@ -19,7 +18,7 @@ func (client *Api) Upload(upload pkg.UploadFile, part pkg.UploadPart) error {
 		client.init(upload, upload.ParentId())
 	})
 	if upload.IsExists() {
-		log.Println("file exists, fast upload")
+		fmt.Println("file exists, fast upload")
 		client.commit(upload, upload.UploadId(), "0")
 		return nil
 	}
@@ -53,7 +52,7 @@ func (c *Api) init(i pkg.UploadFile, parentId string) error {
 	params.Set("parentFolderId", parentId)
 	params.Set("fileName", i.Name())
 	params.Set("fileSize", strconv.FormatInt(i.Size(), 10))
-	params.Set("sliceSize", strconv.Itoa(drive.Slice))
+	params.Set("sliceSize", strconv.Itoa(file.Slice))
 
 	if i.SliceNum() > 1 {
 		params.Set("lazyCheck", "1")
@@ -109,7 +108,7 @@ func (client *Api) UploadPart(part pkg.UploadPart, fileId string) error {
 	if err := client.do("/person/getMultiUploadUrls", p, &urlResp); err != nil {
 		return err
 	}
-	log.Printf("start uploading part %s\n", num)
+	fmt.Printf("start uploading part %s\n", num)
 
 	upload := urlResp.Data["partNumber_"+num]
 	req, _ := http.NewRequest(http.MethodPut, upload.RequestURL, part.Data())
@@ -127,7 +126,7 @@ func (client *Api) UploadPart(part pkg.UploadPart, fileId string) error {
 		data, _ := io.ReadAll(resp.Body)
 		return fmt.Errorf("upload error, %s", string(data))
 	}
-	log.Printf("part %s upload completed\n", num)
+	fmt.Printf("part %s upload completed\n", num)
 	return nil
 }
 
@@ -155,5 +154,9 @@ func (client *Api) commit(i pkg.UploadFile, fileId, lazyCheck string) error {
 	params.Set("sliceMd5", i.SliceMD5())
 	params.Set("lazyCheck", lazyCheck)
 	params.Set("uploadFileId", fileId)
-	return client.do("/person/commitMultiUploadFile", params, &result)
+	if i.Overwrite() {
+		params.Set("opertype", "3")
+	}
+	err := client.do("/person/commitMultiUploadFile", params, &result)
+	return err
 }

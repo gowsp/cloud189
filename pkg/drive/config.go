@@ -2,6 +2,7 @@ package drive
 
 import (
 	"encoding/json"
+	"io"
 	"log"
 	"os"
 
@@ -56,22 +57,30 @@ func mkdir(dirs ...string) string {
 	return path
 }
 func OpenConfig(path string) (*Config, error) {
-	if path == "" {
-		path = defaultPath()
+	file := path
+	if file == "" {
+		file = defaultPath()
 	}
-	f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0644)
+	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
 		return nil, err
 	}
+	defer f.Close()
 	var config Config
 	err = json.NewDecoder(f).Decode(&config)
-	if err != nil {
+	if err == io.EOF {
+		config = Config{path: path}
+		return &config, nil
+	} else if err != nil {
 		return nil, err
 	}
 	config.path = path
 	return &config, nil
 }
 func (config *Config) Save() error {
+	if config.path == "" {
+		return nil
+	}
 	f, err := os.OpenFile(config.path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err

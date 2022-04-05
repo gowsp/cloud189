@@ -3,46 +3,55 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
 	"github.com/gowsp/cloud189/pkg/drive"
-	"github.com/gowsp/cloud189/pkg/web-api"
+	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 
 var (
 	cfgFile string
-	rootCmd = &cobra.Command{
+	RootCmd = &cobra.Command{
 		Use:  "cloud189",
 		Long: "cloud189 enables users to manage cloud files through the command line. For more information, please visit https://github.com/gowsp/cloud189",
 	}
 )
 
-func Execute(cmds ...*cobra.Command) {
-	rootCmd.AddCommand(cmds...)
-	if err := rootCmd.Execute(); err != nil {
+func AddCommand(cmds ...*cobra.Command) {
+	RootCmd.AddCommand(cmds...)
+}
+func Execute() {
+	if err := RootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cloud189/config.json)")
+	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cloud189/config.json)")
 
-	rootCmd.AddCommand(loginCmd)
-	rootCmd.AddCommand(signCmd)
-	rootCmd.AddCommand(upCmd)
-	rootCmd.AddCommand(rmCmd)
-	rootCmd.AddCommand(dlCmd)
-	rootCmd.AddCommand(lsCmd)
-	rootCmd.AddCommand(mkdirCmd)
-	rootCmd.AddCommand(mvCmd)
-	rootCmd.AddCommand(cpCmd)
-	rootCmd.AddCommand(dfCmd)
-	rootCmd.AddCommand(webdavCmd)
+	RootCmd.AddCommand(loginCmd)
+	RootCmd.AddCommand(signCmd)
+	RootCmd.AddCommand(upCmd)
+	RootCmd.AddCommand(rmCmd)
+	RootCmd.AddCommand(dlCmd)
+	RootCmd.AddCommand(lsCmd)
+	RootCmd.AddCommand(mkdirCmd)
+	RootCmd.AddCommand(mvCmd)
+	RootCmd.AddCommand(cpCmd)
+	RootCmd.AddCommand(dfCmd)
+	RootCmd.AddCommand(webdavCmd)
 }
 
-func client() pkg.App {
-	api := web.NewClient(cfgFile)
-	return drive.NewClient(api)
+var app pkg.App
+var once sync.Once
+
+func App() pkg.App {
+	once.Do(func() {
+		api := web.NewClient(cfgFile)
+		app = drive.NewClient(api)
+	})
+	return app
 }

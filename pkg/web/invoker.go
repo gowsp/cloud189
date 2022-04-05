@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/cookiejar"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
@@ -57,11 +56,14 @@ func (i *invoker) Do(req *http.Request, data interface{}, retry int) error {
 		return os.ErrInvalid
 	}
 	resp, err := i.http.Do(req)
-	body, _ := httputil.DumpResponse(resp, true)
-	fmt.Println(string(body))
+	// body, _ := httputil.DumpResponse(resp, true)
+	// fmt.Println(string(body))
 	if err != nil || resp.StatusCode == http.StatusBadRequest {
 		time.Sleep(time.Millisecond * 200)
-		i.refresh()
+		err := i.refresh()
+		if err != nil {
+			return err
+		}
 		req.Header.Del("Cookie")
 		if req.GetBody != nil {
 			req.Body, _ = req.GetBody()
@@ -100,7 +102,7 @@ func (i *invoker) Login(ctx *Content) error {
 	json.NewDecoder(resp.Body).Decode(&result)
 	resp.Body.Close()
 	if result.Result != 0 {
-		return fmt.Errorf("login failed")
+		return fmt.Errorf("login failed: %s", result.Msg)
 	}
 	sson := util.FindCookie(resp.Cookies(), "SSON")
 	resp, _ = i.http.Get(result.ToUrl)
@@ -108,6 +110,5 @@ func (i *invoker) Login(ctx *Content) error {
 	i.conf.User = ctx.user
 	i.conf.SSON = sson.Value
 	i.conf.Auth = user.Value
-	i.conf.Save()
-	return nil
+	return i.conf.Save()
 }

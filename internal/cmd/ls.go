@@ -2,28 +2,40 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
+	"github.com/gowsp/cloud189/internal/session"
 	"github.com/gowsp/cloud189/pkg/file"
 	"github.com/spf13/cobra"
 )
 
 var lsCmd = &cobra.Command{
-	Use:   "ls",
-	Short: "list file",
-	Args:  cobra.MaximumNArgs(1),
+	Use:    "ls",
+	PreRun: session.Parse,
+	Short:  "list file",
+	Args:   cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		client := client()
-		info, err := client.Stat(args[0])
+		err := file.CheckPath(args...)
 		if err != nil {
 			fmt.Println(err)
-			os.Exit(1)
+			return
+		}
+		var name string
+		if len(args) == 0 {
+			name = session.Pwd()
+		} else {
+			name = args[0]
+		}
+		client := App()
+		info, err := client.Stat(name)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 		if info.IsDir() {
 			files, err := client.List(info)
 			if err != nil {
 				fmt.Println(err)
-				os.Exit(1)
+				return
 			}
 			for _, v := range files {
 				fmt.Println(file.ReadableFileInfo(v))

@@ -47,7 +47,7 @@ func (f *NetFile) Upload() {
 		name = strings.Split(header, "filename=")[1]
 		name, _ = url.PathUnescape(name)
 	}
-	sf := NewStreamFileWithParent(name, f.parentId, size, f.client)
+	sf := NewStream(name, f.parentId, size, f.client)
 	io.Copy(sf, resp.Body)
 	resp.Body.Close()
 }

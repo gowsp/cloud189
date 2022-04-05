@@ -9,28 +9,36 @@ import (
 	"io"
 	"io/fs"
 	"math"
+	"os"
 	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 	"golang.org/x/net/webdav"
 )
 
-func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Uploader) webdav.File {
-	buffSize := Slice
-	if size < Slice {
+func NewStream(name, parentId string, size int64, client pkg.Uploader) webdav.File {
+	return NewStreamFile(name, parentId, size, false, client)
+}
+
+func NewStreamFile(name, parentId string, size int64, overwirte bool, client pkg.Uploader) webdav.File {
+	buffSize := file.Slice
+	if size < file.Slice {
 		buffSize = int(size)
 	}
-	num := int(math.Ceil(float64(size) / float64(Slice)))
+	num := int(math.Ceil(float64(size) / float64(file.Slice)))
 	return &StreamFile{
-		client:   client,
-		partNum:  num,
-		parts:    make([]string, num),
-		parentId: parentId,
-		name:     name,
-		size:     size,
-		fileMd5:  md5.New(),
+		client:    client,
+		partNum:   num,
+		parts:     make([]string, num),
+		parentId:  parentId,
+		name:      name,
+		size:      size,
+		fileMd5:   md5.New(),
+		overwrite: overwirte,
 		partData: &PartData{
 			hash: md5.New(),
 			data: bytes.NewBuffer(make([]byte, 0, buffSize)),
@@ -39,21 +47,26 @@ func NewStreamFileWithParent(name, parentId string, size int64, client pkg.Uploa
 }
 
 type StreamFile struct {
-	once     sync.Once
-	Exists   bool
-	client   pkg.Uploader
-	parentId string
-	name     string
-	size     int64
-	partNum  int
-	partData *PartData
-	fileMd5  hash.Hash
-	md5Cache string
-	parts    []string
-	fileId   string
-	writed   int64
+	once      sync.Once
+	Exists    bool
+	client    pkg.Uploader
+	parentId  string
+	name      string
+	size      int64
+	partNum   int
+	partData  *PartData
+	fileMd5   hash.Hash
+	md5Cache  string
+	parts     []string
+	fileId    string
+	writed    int64
+	modTime   time.Time
+	overwrite bool
 }
 
+func (f *StreamFile) Overwrite() bool {
+	return f.overwrite
+}
 func (f *StreamFile) Type() string {
 	return "STREAM"
 }
@@ -73,7 +86,7 @@ func (f *StreamFile) SetUploadId(fileId string) {
 	f.fileId = fileId
 }
 func (f *StreamFile) Prepare(init func()) {
-	f.once.Do(func() {})
+	f.once.Do(init)
 }
 func (f *StreamFile) SetExists(exists bool) {
 	f.Exists = exists
@@ -113,8 +126,8 @@ func (f *StreamFile) Write(p []byte) (n int, err error) {
 	n, _ = f.fileMd5.Write(p)
 	offset := f.partData.Writed() + n
 	switch {
-	case offset > Slice:
-		offset = offset - Slice
+	case offset > file.Slice:
+		offset = offset - file.Slice
 		f.partData.Write(p[:offset])
 		err = f.upload(f.partData)
 		if err != nil {
@@ -122,7 +135,7 @@ func (f *StreamFile) Write(p []byte) (n int, err error) {
 		}
 		f.partData.Reset()
 		_, err = f.partData.Write(p[offset:])
-	case offset == Slice:
+	case offset == file.Slice:
 		n, _ = f.partData.Write(p)
 		err = f.upload(f.partData)
 		if err != nil {
@@ -135,6 +148,7 @@ func (f *StreamFile) Write(p []byte) (n int, err error) {
 	f.writed += int64(n)
 	if f.IsComplete() {
 		err = f.upload(f.partData)
+		f.modTime = time.Now()
 	}
 	return
 }
@@ -151,11 +165,15 @@ func (f *StreamFile) Readdir(count int) ([]fs.FileInfo, error) {
 	return make([]fs.FileInfo, 0), nil
 }
 func (f *StreamFile) Stat() (fs.FileInfo, error) {
-	return nil, nil
+	return f, nil
 }
 func (f *StreamFile) Close() error {
 	return nil
 }
+func (f *StreamFile) Mode() fs.FileMode  { return os.ModePerm }            // file mode bits
+func (f *StreamFile) ModTime() time.Time { return f.modTime }              // modification time
+func (f *StreamFile) IsDir() bool        { return path.Ext(f.name) == "" } // abbreviation for Mode().IsDir()
+func (f *StreamFile) Sys() any           { return nil }                    // underlying data source (can return nil)
 
 type PartData struct {
 	data   *bytes.Buffer

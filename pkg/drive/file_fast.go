@@ -16,13 +16,14 @@ func IsFastFile(name string) bool {
 }
 
 type FastFile struct {
-	once     sync.Once
-	client   pkg.Uploader
-	parentId string
-	uploadId string
-	name     string
-	fileMd5  string
-	size     int64
+	once      sync.Once
+	client    pkg.Uploader
+	parentId  string
+	uploadId  string
+	name      string
+	fileMd5   string
+	size      int64
+	overwrite bool
 }
 
 func NewFastFile(parentId, url string, client pkg.Uploader) *FastFile {
@@ -52,6 +53,9 @@ func (f *FastFile) ParentId() string {
 }
 func (f *FastFile) Name() string {
 	return f.name
+}
+func (f *FastFile) Overwrite() bool {
+	return f.overwrite
 }
 func (f *FastFile) Size() int64 {
 	return f.size

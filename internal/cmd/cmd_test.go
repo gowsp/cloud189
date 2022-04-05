@@ -6,51 +6,54 @@ import (
 
 func TestLogin(t *testing.T) {
 	// rootCmd.SetArgs([]string{"login", "-i", "xxxxx", "xxxxx"})
-	rootCmd.SetArgs([]string{"login"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"login"})
+	RootCmd.Execute()
 }
 func TestSign(t *testing.T) {
-	rootCmd.SetArgs([]string{"sign"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"sign"})
+	RootCmd.Execute()
 }
 func TestMkdir(t *testing.T) {
-	rootCmd.SetArgs([]string{"mkdir", "/demo", "/demo/1/2", "/demo/1/3"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"mkdir", "/demo", "/demo/1", "/demo/1/2", "/demo/1/3"})
+	RootCmd.Execute()
 }
 func TestUp(t *testing.T) {
-	rootCmd.SetArgs([]string{"up", "../../LICENSE", "https://github.com/gowsp/cloud189/releases/download/v0.2/cloud189_0.2_windows_amd64.zip",
+	RootCmd.SetArgs([]string{"up",
+		"../../LICENSE",
+		"fast://B4CC2601D293ECB814447B80C0ACEC8D:3071418/cloud189_fast.zip",
+		"https://github.com/gowsp/cloud189/releases/download/v0.4.3/cloud189_0.4.3_windows_amd64.zip",
 		"../../internal", "/demo/1/2"})
-	rootCmd.Execute()
+	RootCmd.Execute()
 }
 func TestLs(t *testing.T) {
-	rootCmd.SetArgs([]string{"ls", "/我的图片"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"ls", "/demo/1/2"})
+	RootCmd.Execute()
 }
 func TestDownFile(t *testing.T) {
-	rootCmd.SetArgs([]string{"dl", "/demo1", "/home/wuzk/data/tmp/"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"dl", "/demo/1/2/LICENSE", "/tmp/"})
+	RootCmd.Execute()
 }
 func TestDownDir(t *testing.T) {
-	rootCmd.SetArgs([]string{"dl", "/demo1/", "d:/"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"dl", "/demo/", "/tmp/"})
+	RootCmd.Execute()
 }
 func TestCp(t *testing.T) {
-	rootCmd.SetArgs([]string{"cp", "/demo/1/2", "/demo"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"cp", "/demo/1/2", "/demo"})
+	RootCmd.Execute()
 }
 func TestMv(t *testing.T) {
-	rootCmd.SetArgs([]string{"mv", "/demo/1/3", "/demo"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"mv", "/demo/1/3", "/demo"})
+	RootCmd.Execute()
 }
 func TestRm(t *testing.T) {
-	rootCmd.SetArgs([]string{"rm", "/demo"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"rm", "/demo"})
+	RootCmd.Execute()
 }
 func TestDf(t *testing.T) {
-	rootCmd.SetArgs([]string{"df"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"df"})
+	RootCmd.Execute()
 }
 func TestWebDav(t *testing.T) {
-	rootCmd.SetArgs([]string{"webdav", ":80"})
-	rootCmd.Execute()
+	RootCmd.SetArgs([]string{"webdav", ":8080"})
+	RootCmd.Execute()
 }

@@ -14,35 +14,38 @@ import (
 	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type LocalFile struct {
-	once     sync.Once
-	Exists   bool
-	client   pkg.Uploader
-	parentId string
-	uploadId string
-	path     string
-	info     os.FileInfo
-	partName []string
-	fileMD5  string
-	sliceMD5 string
-	writed   int
-	sliceNum int
+	once      sync.Once
+	Exists    bool
+	client    pkg.Uploader
+	parentId  string
+	uploadId  string
+	path      string
+	info      os.FileInfo
+	partName  []string
+	fileMD5   string
+	sliceMD5  string
+	writed    int
+	sliceNum  int
+	overwrite bool
 }
 type FilePath struct {
-	FullPath string
-	FileInfo fs.FileInfo
+	CloudPath string
+	LocalPath string
+	FileInfo  fs.FileInfo
 }
 
 func NewLocalFile(parentId string, path *FilePath, client pkg.Uploader) *LocalFile {
 	size := path.FileInfo.Size()
-	sliceNum := int(math.Ceil(float64(size) / float64(Slice)))
+	sliceNum := int(math.Ceil(float64(size) / float64(file.Slice)))
 	return &LocalFile{
 		parentId: parentId,
 		client:   client,
 		info:     path.FileInfo,
-		path:     path.FullPath,
+		path:     path.LocalPath,
 		sliceNum: sliceNum,
 		partName: make([]string, sliceNum),
 	}
@@ -72,6 +75,9 @@ func (f *LocalFile) Upload() {
 }
 func (f *LocalFile) SetUploadId(uploadId string) {
 	f.uploadId = uploadId
+}
+func (f *LocalFile) Overwrite() bool {
+	return f.overwrite
 }
 func (f *LocalFile) SetExists(exists bool) {
 	f.Exists = exists
@@ -114,18 +120,18 @@ func (f *LocalFile) SliceMD5() string {
 }
 
 func (f *LocalFile) md5() {
-	file, err := os.Open(f.path)
+	local, err := os.Open(f.path)
 	if err != nil {
 		log.Fatalf("open %v error %v", f.path, err)
 	}
-	defer file.Close()
+	defer local.Close()
 
 	buf := make([]byte, 32*1024)
 
 	count := f.SliceNum()
 	global := md5.New()
 	if count == 1 {
-		io.CopyBuffer(global, file, buf)
+		io.CopyBuffer(global, local, buf)
 		v := global.Sum(nil)
 		f.fileMD5 = hex.EncodeToString(v)
 		f.sliceMD5 = f.fileMD5
@@ -137,8 +143,8 @@ func (f *LocalFile) md5() {
 	detail := md5.New()
 
 	for i := 0; i < count; i++ {
-		offset := int64(i * int(Slice))
-		s := io.NewSectionReader(file, offset, Slice)
+		offset := int64(i * int(file.Slice))
+		s := io.NewSectionReader(local, offset, file.Slice)
 		r := bufio.NewReader(s)
 		for {
 			n, err := r.Read(buf)
@@ -168,8 +174,8 @@ type FilePart struct {
 	data *io.SectionReader
 }
 
-func NewFilePart(file *os.File, num int, name string) *FilePart {
-	data := io.NewSectionReader(file, int64(num*Slice), Slice)
+func NewFilePart(f *os.File, num int, name string) *FilePart {
+	data := io.NewSectionReader(f, int64(num*file.Slice), file.Slice)
 	return &FilePart{data: data, num: num, name: name}
 }
 func (f *FilePart) Name() string {

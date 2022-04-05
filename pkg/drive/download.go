@@ -19,7 +19,7 @@ func (f *Client) Download(local string, paths ...string) error {
 		if file.IsDir() {
 			f.downloadDir(local, file)
 		} else {
-			f.downloadFile(local, file)
+			f.DownloadFile(local, file)
 		}
 	}
 	return nil
@@ -41,12 +41,12 @@ func (c *Client) downloadDir(local string, cloud pkg.File) error {
 		if f.IsDir() {
 			c.downloadDir(local, f)
 		} else {
-			c.downloadFile(local, f)
+			c.DownloadFile(local, f)
 		}
 	}
 	return nil
 }
-func (c *Client) downloadFile(local string, cloud pkg.File) error {
+func (c *Client) DownloadFile(local string, cloud pkg.File) error {
 	var file *os.File
 	stat, err := os.Stat(local)
 	if err == nil && stat.IsDir() {

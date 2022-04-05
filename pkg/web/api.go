@@ -72,3 +72,8 @@ func NewClient(path string) *Api {
 	i := newInvoker(conf)
 	return &Api{invoker: i, conf: conf}
 }
+
+func NewApi(conf *drive.Config) *Api {
+	i := newInvoker(conf)
+	return &Api{invoker: i, conf: conf}
+}

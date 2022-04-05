@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"encoding/json"
 	"net/http"
 	"os"
 	"time"
@@ -23,32 +22,6 @@ type FileExt struct {
 	DownloadUrl string
 }
 
-var Root = &SysFolder{FileId: "-11", FileName: "全部文件"}
-var System map[string]string = map[string]string{
-	"同步盘":  "0",
-	"私密空间": "-10",
-	"我的图片": "-12",
-	"我的视频": "-13",
-	"我的音乐": "-14",
-	"我的文档": "-15",
-	"我的应用": "-16",
-}
-
-type SysFolder struct {
-	FileId   json.Number
-	FileName string
-	ParentId string
-}
-
-func (f *SysFolder) Id() string         { return f.FileId.String() }
-func (f *SysFolder) PId() string        { return f.ParentId }
-func (f *SysFolder) Name() string       { return f.FileName }
-func (f *SysFolder) Size() int64        { return 0 }
-func (f *SysFolder) Mode() os.FileMode  { return os.ModePerm }
-func (f *SysFolder) ModTime() time.Time { return time.Now() }
-func (f *SysFolder) IsDir() bool        { return true }
-func (f *SysFolder) Sys() any           { return nil }
-
 type Api interface {
 	Sign() error
 
@@ -66,9 +39,11 @@ type Api interface {
 
 	ListFile(id string) ([]File, error)
 
+	ListDir(id string) ([]File, error)
+
 	Mkdir(parentId, path string, parents bool) error
 
-	Mkdirs(parentId string, path ...string) error
+	Mkdirs(parentId string, path ...string) (map[string]interface{}, error)
 
 	Copy(taget string, src ...File) error
 
@@ -84,6 +59,8 @@ type Api interface {
 }
 
 type App interface {
+	Uploader() Uploader
+
 	Login(name, password string) error
 
 	Sign() error
@@ -93,6 +70,8 @@ type App interface {
 	Stat(path string) (File, error)
 
 	List(file File) ([]File, error)
+
+	ListDir(name string) ([]File, error)
 
 	Mkdir(path string, parents bool) error
 
@@ -105,6 +84,8 @@ type App interface {
 	Remove(paths ...string) error
 
 	Download(local string, paths ...string) error
+
+	DownloadFile(local string, file File) error
 
 	Upload(cloud string, locals ...string) error
 }

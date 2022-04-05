@@ -1,7 +1,7 @@
 package webdav
 
 import (
-	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/gowsp/cloud189/pkg"
@@ -12,19 +12,28 @@ type WEBDAV_KEY string
 
 const FILE_SIZE WEBDAV_KEY = "FileSize"
 
-func Serve(addr string, client pkg.Client) {
+func Serve(addr string, client pkg.App) {
+	sys := &CloudFileSystem{app: client}
 	fs := &webdav.Handler{
-		FileSystem: &Cloud189FileSystem{client: client},
+		FileSystem: sys,
 		LockSystem: webdav.NewMemLS(),
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		if req.Method == http.MethodPut {
-			ctx := req.Context()
-			ctx = context.WithValue(ctx, FILE_SIZE, req.ContentLength)
-			req = req.WithContext(ctx)
+		switch req.Method {
+		case "COPY":
+			status, _ := sys.Copy(w, req)
+			w.WriteHeader(status)
+			if status != http.StatusNoContent {
+				w.Write([]byte(webdav.StatusText(status)))
+			}
+			return
 		}
+		req = prepare(req)
 		fs.ServeHTTP(w, req)
 	})
-	http.ListenAndServe(addr, nil)
+	err := http.ListenAndServe(addr, nil)
+	if err != nil {
+		fmt.Println(err)
+	}
 
 }

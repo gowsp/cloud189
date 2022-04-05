@@ -1,10 +1,13 @@
 package drive
 
 import (
+	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type Client struct {
@@ -13,6 +16,10 @@ type Client struct {
 
 func NewClient(api pkg.Api) *Client {
 	return &Client{api: api}
+}
+
+func (f *Client) Uploader() pkg.Uploader {
+	return f.api
 }
 func (f *Client) Login(name, password string) error {
 	return f.api.Login(name, password)
@@ -25,7 +32,7 @@ func (f *Client) Space() (pkg.Space, error) {
 }
 func (f *Client) Stat(name string) (pkg.File, error) {
 	var err error
-	var file pkg.File = pkg.Root
+	var file pkg.File = file.Root
 	path := strings.Split(name, "/")
 	size := len(path) - 1
 	for i := 1; i < size; i++ {
@@ -45,18 +52,31 @@ func (f *Client) List(file pkg.File) ([]pkg.File, error) {
 	}
 	return nil, os.ErrInvalid
 }
-func (f *Client) Mkdir(path string, parents bool) error {
-	if parents {
-		return f.api.Mkdir(pkg.Root.Id(), path, parents)
+func (f *Client) ListDir(name string) ([]pkg.File, error) {
+	stat, err := f.Stat(name)
+	if err != nil {
+		return nil, err
 	}
-	dir, err := f.Stat(Dir(path))
+	return f.api.ListDir(stat.Id())
+}
+func (f *Client) Mkdir(name string, parents bool) error {
+	if parents {
+		return f.api.Mkdir(file.Root.Id(), name, parents)
+	}
+	stat, err := f.Stat(name)
+	if err == nil && stat != nil {
+		return os.ErrExist
+	}
+	dir, file := path.Split(name)
+	parent, err := f.Stat(dir)
 	if err != nil {
 		return err
 	}
-	return f.api.Mkdir(dir.Id(), Base(path), parents)
+	return f.api.Mkdir(parent.Id(), file, parents)
 }
 func (f *Client) Mkdirs(path ...string) error {
-	return f.api.Mkdirs(pkg.Root.Id(), path...)
+	_, err := f.api.Mkdirs(file.Root.Id(), path...)
+	return err
 }
 func (f *Client) Remove(paths ...string) error {
 	data := f.parse(paths...)
@@ -74,17 +94,14 @@ func (f *Client) Copy(target string, from ...string) error {
 		return f.copy(target, from[0])
 	}
 	dest, err := f.Stat(target)
-	if err != nil {
-		return err
+	if err != nil || !dest.IsDir() {
+		return fmt.Errorf("%s: file does not exist or not a directory", target)
 	}
 	src := f.parse(from...)
 	if len(src) == 0 {
 		return nil
 	}
-	if dest.IsDir() {
-		return f.api.Copy(dest.Id(), src...)
-	}
-	return os.ErrInvalid
+	return f.api.Copy(dest.Id(), src...)
 }
 func (f *Client) copy(target string, from string) error {
 	if from == target {
@@ -95,10 +112,22 @@ func (f *Client) copy(target string, from string) error {
 		return err
 	}
 	dest, err := f.Stat(target)
-	if dest.IsDir() {
+	if err == nil && dest.IsDir() {
 		return f.api.Copy(dest.Id(), src)
 	}
-	return os.ErrInvalid
+	if !os.IsNotExist(err) {
+		return err
+	}
+	odir := path.Dir(from)
+	ndir := path.Dir(target)
+	if ndir == odir {
+		return fmt.Errorf("same dir not support copy file")
+	}
+	dest, err = f.Stat(ndir)
+	if err != nil {
+		return err
+	}
+	return f.api.Copy(dest.Id(), src)
 }
 
 func (f *Client) Move(target string, src ...string) error {
@@ -106,21 +135,18 @@ func (f *Client) Move(target string, src ...string) error {
 	if size == 0 {
 		return nil
 	}
-	tar, err := f.Stat(target)
-	if err != nil {
-		return err
-	}
-	if len(src) == 1 {
+	if size == 1 {
 		return f.move(src[0], target)
 	}
-	if !tar.IsDir() {
-		return os.ErrInvalid
+	dest, err := f.Stat(target)
+	if err != nil || !dest.IsDir() {
+		return fmt.Errorf("%s: file does not exist or not a directory", target)
 	}
-	data := f.parse(src...)
-	if len(data) == 0 {
+	files := f.parse(src...)
+	if len(files) == 0 {
 		return nil
 	}
-	return f.api.Move(tar.Id(), data...)
+	return f.api.Move(dest.Id(), files...)
 }
 func (f *Client) move(oldName, newName string) error {
 	if oldName == newName {
@@ -128,39 +154,27 @@ func (f *Client) move(oldName, newName string) error {
 	}
 	src, err := f.Stat(oldName)
 	if err != nil {
-		return err
+		return fmt.Errorf("%s: file does not exist", oldName)
+	}
+	ndir, nname := path.Split(newName)
+	odir, oname := path.Split(oldName)
+	if odir == ndir {
+		// same dir rename file
+		return f.api.Rename(src, nname)
 	}
 	dest, err := f.Stat(newName)
 	if os.IsNotExist(err) {
-		if IsDir(newName) {
-			return err
-		}
-		dir := Dir(newName)
-		if dir == Dir(oldName) {
-			return f.api.Rename(src, Base(newName))
-		}
-		dest, err = f.Stat(dir)
+		dest, err = f.Stat(ndir)
 		if err != err {
 			return err
 		}
-		if Base(newName) == Base(oldName) {
-			return f.api.Move(dest.PId(), src)
-		} else {
-			f.api.Rename(src, Base(newName))
-			return f.api.Move(dest.PId(), src)
+		if nname != oname {
+			f.api.Rename(src, nname)
 		}
+		return f.api.Move(dest.Id(), src)
 	}
 	if dest.IsDir() {
 		return f.api.Move(dest.Id(), src)
 	}
-	err = f.api.Delete(dest)
-	if err != nil {
-		return err
-	}
-	if Base(newName) == Base(oldName) {
-		return f.api.Move(dest.PId(), src)
-	} else {
-		f.api.Rename(src, Base(newName))
-		return f.api.Move(dest.PId(), src)
-	}
+	return os.ErrExist
 }

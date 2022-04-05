@@ -58,6 +58,9 @@ func (c *Api) Download(file pkg.File, start int64) (*http.Response, error) {
 	if file.IsDir() {
 		return nil, errors.New("not support download dir")
 	}
+	if file.Sys() == nil {
+		file, _ = c.Detail(file.Id())
+	}
 	req, err := http.NewRequest(http.MethodGet, file.Sys().(pkg.FileExt).DownloadUrl, nil)
 	if err != nil {
 		return nil, err

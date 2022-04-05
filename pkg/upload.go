@@ -14,6 +14,7 @@ type UploadFile interface {
 	Type() string
 	IsComplete() bool
 	UploadId() string
+	Overwrite() bool
 	SetExists(exists bool)
 	SetUploadId(uploadId string)
 }

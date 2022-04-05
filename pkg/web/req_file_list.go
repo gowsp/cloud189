@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/cache"
 )
 
 type listResp struct {
@@ -15,16 +16,15 @@ type listResp struct {
 }
 
 func (c *Api) ListFile(id string) ([]pkg.File, error) {
-	result := &listResp{}
-	err := c.list(id, result, 1)
-	if err != nil {
-		return nil, err
-	}
-	data := make([]pkg.File, 0)
-	for _, f := range result.Data {
-		data = append(data, f)
-	}
-	return data, nil
+	return cache.List(id, func(entry *cache.DirEntry) bool {
+		ava := c.cached(entry)
+		entry.Init = true
+		return ava
+	}, func() ([]*FileInfo, error) {
+		result := &listResp{}
+		err := c.list(id, result, 1)
+		return result.Data, err
+	})
 }
 
 func (c *Api) list(id string, result *listResp, page int) error {
