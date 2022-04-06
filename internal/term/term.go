@@ -14,7 +14,7 @@ import (
 
 func Start() {
 	session.SetWorkDir("/")
-	cmd.AddCommand(cdCmd, pwdCmd)
+	cmd.AddCommand(cdCmd, pwdCmd, exitCmd)
 
 	history := filepath.Join(os.TempDir(), ".cloud189_liner_history")
 	line := liner.NewLiner()
@@ -31,7 +31,9 @@ func Start() {
 	for {
 		if args, err := line.Prompt(fmt.Sprintf("[cloud189 %s]$ ", session.Base())); err == nil {
 			root.SetArgs(strings.Split(args, " "))
-			root.Execute()
+			if root.Execute() == liner.ErrPromptAborted {
+				break
+			}
 			line.AppendHistory(args)
 		} else if err == liner.ErrPromptAborted {
 			fmt.Println("Bye")

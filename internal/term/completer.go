@@ -8,7 +8,18 @@ import (
 	"github.com/gowsp/cloud189/internal/session"
 )
 
-var cmds = []string{"pwd", "cd", "ls", "mkdir", "cp", "mv", "rm", "dl", "up"}
+var tips = map[string]struct{}{
+	"cd":    {},
+	"ls":    {},
+	"mkdir": {},
+	"cp":    {},
+	"mv":    {},
+	"rm":    {},
+	"dl":    {},
+	"up":    {},
+}
+var cmds = []string{"cd", "ls", "mkdir", "cp", "mv", "rm", "dl", "up",
+	"pwd", "version", "login", "exit", "logout"}
 
 func completer(line string) (c []string) {
 	args := strings.Split(line, " ")
@@ -19,6 +30,9 @@ func completer(line string) (c []string) {
 				c = append(c, n)
 			}
 		}
+		return
+	}
+	if _, ok := tips[args[0]]; !ok {
 		return
 	}
 	arg := args[len-1]
