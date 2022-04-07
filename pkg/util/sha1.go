@@ -11,3 +11,4 @@ func SHA1(v, l string) []byte {
 	mac.Write([]byte(v))
 	return mac.Sum(nil)
 }
+

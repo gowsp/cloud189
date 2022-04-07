@@ -86,11 +86,11 @@ func (uploader *api) do(u string, f url.Values, result uploadResp) error {
 	case "SUCCESS":
 		return nil
 	case "InvalidSessionKey":
-		uploader.invoker.refresh()
+		uploader.refresh()
 		uploader.sessionKey = ""
 		return uploader.do(u, f, result)
 	case "InvalidSignature":
-		uploader.invoker.refresh()
+		uploader.refresh()
 		uploader.sessionKey = ""
 		return uploader.do(u, f, result)
 	default:

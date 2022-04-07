@@ -14,3 +14,8 @@ func Debug(req *http.Request) *http.Response {
 	log.Println(string(data))
 	return resp
 }
+
+func DebugResp(resp *http.Response) {
+	data, _ := httputil.DumpResponse(resp, true)
+	log.Println(string(data))
+}

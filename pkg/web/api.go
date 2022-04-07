@@ -1,6 +1,10 @@
 package web
 
-import "github.com/gowsp/cloud189/pkg/drive"
+import (
+	"github.com/gowsp/cloud189/pkg/drive"
+	"github.com/gowsp/cloud189/pkg/invoker"
+	"github.com/gowsp/cloud189/pkg/util"
+)
 
 // userInfoBase: "".concat(r.apiBaseUrl, "/open/user/getUserInfoForPortal.action"),
 // userInfoExt: "".concat(r.apiBaseUrl, "/open/user/getUserInfoExt.action"),
@@ -62,19 +66,52 @@ import "github.com/gowsp/cloud189/pkg/drive"
 // getPhotoOpenLog: "".concat(r.apiBaseUrl, "/photo/getPhotoOpenLog.action"),
 // getNewVlcVideoPlayUrl: "".concat(r.apiBaseUrl, "/portal/getNewVlcVideoPlayUrl.action")
 type api struct {
-	invoker    *invoker
+	invoker    *invoker.Invoker
 	sessionKey string
 	conf       *drive.Config
 }
 
 func NewApi(path string) *api {
 	conf, _ := drive.OpenConfig(path)
-	i := newInvoker(conf)
-	return &api{invoker: i, conf: conf}
+	api := &api{conf: conf}
+	api.invoker = invoker.NewInvoker("https://cloud.189.cn/api", api.refresh, conf)
+	return api
 }
 
 func NewMemApi(username, password string) *api {
-	conf := &drive.Config{User: drive.User{Name: username, Password: password}}
-	i := newInvoker(conf)
-	return &api{invoker: i, conf: conf}
+	conf := &drive.Config{User: &drive.User{Name: username, Password: password}}
+	api := &api{conf: conf}
+	api.invoker = invoker.NewInvoker("https://cloud.189.cn/api", api.refresh, conf)
+	return api
+}
+
+func (i *api) login(user *drive.User) error {
+	result, err := i.invoker.PwdLogin("https://cloud.189.cn/api/portal/loginUrl.action", nil, user)
+	if err != nil {
+		return err
+	}
+	resp, err := i.invoker.Fetch(result.ToUrl)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	i.conf.User = user
+	i.conf.SSON = result.SSON
+	i.conf.Auth = i.invoker.Cookie("https://cloud.189.cn", "COOKIE_LOGIN_USER")
+	return i.conf.Save()
+}
+func (i *api) refresh() error {
+	resp, err := i.invoker.Fetch("https://cloud.189.cn/api/portal/loginUrl.action")
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	cookies := i.invoker.Cookies(resp.Request.URL)
+	user := util.FindCookie(cookies, "COOKIE_LOGIN_USER")
+	if user != nil {
+		i.conf.Auth = user.Value
+		i.conf.Save()
+		return nil
+	}
+	return i.Login(i.conf.User.Name, i.conf.User.Password)
 }

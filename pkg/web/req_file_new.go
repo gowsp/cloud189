@@ -118,7 +118,7 @@ func (client *api) UploadPart(part pkg.UploadPart, fileId string) error {
 		i := strings.Index(v, "=")
 		req.Header.Set(v[0:i], v[i+1:])
 	}
-	resp, err := client.invoker.http.Do(req)
+	resp, err := client.invoker.Send(req)
 	if err != nil {
 		return err
 	}

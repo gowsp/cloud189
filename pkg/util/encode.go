@@ -1,9 +1,17 @@
 package util
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 )
+
+func GetReq(u string, params url.Values) (*http.Request, error) {
+	if len(params) > 0 {
+		u += "?" + params.Encode()
+	}
+	return http.NewRequest(http.MethodGet, u, nil)
+}
 
 func EncodeParam(v url.Values) string {
 	if v == nil {

@@ -28,7 +28,7 @@ func (r *RsaConfig) Encrypt(data string) []byte {
 
 type Config struct {
 	path       string
-	User       User      `json:"user,omitempty"`
+	User       *User     `json:"user,omitempty"`
 	RSA        RsaConfig `json:"rsa,omitempty"`
 	SSON       string    `json:"sson,omitempty"`
 	Auth       string    `json:"auth,omitempty"`

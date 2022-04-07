@@ -64,5 +64,5 @@ func (c *api) Download(file pkg.File, start int64) (*http.Response, error) {
 		return nil, err
 	}
 	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, file.Size()))
-	return c.invoker.http.Do(req)
+	return c.invoker.Send(req)
 }
