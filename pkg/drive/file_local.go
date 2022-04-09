@@ -2,12 +2,12 @@ package drive
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
 	"io"
 	"io/fs"
-	"log"
 	"math"
 	"os"
 	"strings"
@@ -53,25 +53,29 @@ func NewLocalFile(parentId string, path *FilePath, client pkg.Uploader) *LocalFi
 func (f *LocalFile) Prepare(init func()) {
 	f.once.Do(init)
 }
-func (f *LocalFile) Upload() {
+func (f *LocalFile) Upload() error {
 	file, err := os.Open(f.path)
 	if err != nil {
-		log.Fatalf("open %v error %v", f.path, err)
+		return err
 	}
 	defer file.Close()
-	f.md5()
+	err = f.md5()
+	if err != nil {
+		return nil
+	}
 	num := f.SliceNum()
 	for i := 0; i < num; i++ {
 		f.writed = i
 		part := NewFilePart(file, i, f.partName[i])
 		err = f.client.Upload(f, part)
 		if err != nil {
-			return
+			return err
 		}
 		if f.Exists {
 			break
 		}
 	}
+	return nil
 }
 func (f *LocalFile) SetUploadId(uploadId string) {
 	f.uploadId = uploadId
@@ -119,10 +123,10 @@ func (f *LocalFile) SliceMD5() string {
 	return f.sliceMD5
 }
 
-func (f *LocalFile) md5() {
+func (f *LocalFile) md5() error {
 	local, err := os.Open(f.path)
 	if err != nil {
-		log.Fatalf("open %v error %v", f.path, err)
+		return err
 	}
 	defer local.Close()
 
@@ -136,7 +140,7 @@ func (f *LocalFile) md5() {
 		f.fileMD5 = hex.EncodeToString(v)
 		f.sliceMD5 = f.fileMD5
 		f.partName[0] = base64.StdEncoding.EncodeToString(v)
-		return
+		return nil
 	}
 
 	slices := make([]string, count)
@@ -166,6 +170,7 @@ func (f *LocalFile) md5() {
 
 	f.fileMD5 = hex.EncodeToString(global.Sum(nil))
 	f.sliceMD5 = hex.EncodeToString(detail.Sum(nil))
+	return nil
 }
 
 type FilePart struct {
@@ -186,5 +191,7 @@ func (f *FilePart) Num() int {
 
 }
 func (f *FilePart) Data() io.Reader {
-	return f.data
+	buf := new(bytes.Buffer)
+	io.Copy(buf, f.data)
+	return buf
 }

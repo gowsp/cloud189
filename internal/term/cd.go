@@ -20,10 +20,7 @@ var cdCmd = &cobra.Command{
 		}
 		path := args[0]
 		stat, err := cmd.App().Stat(path)
-		if err != nil {
-			fmt.Println("cd error", path, err)
-		}
-		if stat.IsDir() {
+		if err == nil && stat.IsDir() {
 			session.SetWorkDir(path)
 			return
 		}

@@ -21,6 +21,8 @@ var upCmd = &cobra.Command{
 			return
 		}
 		locals := args[:length-1]
-		App().Upload(cloud, locals...)
+		if err := App().Upload(cloud, locals...); err != nil {
+			fmt.Println(err)
+		}
 	},
 }

@@ -163,10 +163,6 @@ func (f *Client) move(oldName, newName string) error {
 	}
 	ndir, nname := path.Split(newName)
 	odir, oname := path.Split(oldName)
-	if odir == ndir {
-		// same dir rename file
-		return f.api.Rename(src, nname)
-	}
 	dest, err := f.Stat(newName)
 	if os.IsNotExist(err) {
 		dest, err = f.Stat(ndir)
@@ -174,7 +170,10 @@ func (f *Client) move(oldName, newName string) error {
 			return err
 		}
 		if nname != oname {
-			f.api.Rename(src, nname)
+			err = f.api.Rename(src, nname)
+		}
+		if odir == ndir {
+			return err
 		}
 		return f.api.Move(dest.Id(), src)
 	}

@@ -1,6 +1,7 @@
 package drive
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -56,7 +57,9 @@ func (client *Client) uploadLocal(parentId, cloud, local string) error {
 	dir["."] = parentId
 	for _, f := range files {
 		i := NewLocalFile(dir[f.CloudPath].(string), &f, client.api)
-		i.Upload()
+		if err := i.Upload(); err != nil {
+			fmt.Println(err)
+		}
 	}
 	return nil
 }
