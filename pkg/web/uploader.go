@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gowsp/cloud189/pkg/drive"
+	"github.com/gowsp/cloud189/pkg/invoker"
 	"github.com/gowsp/cloud189/pkg/util"
 )
 
@@ -31,7 +31,7 @@ func (i *api) session() string {
 	i.sessionKey = user.SessionKey
 	return i.sessionKey
 }
-func (i *api) rsa() *drive.RsaConfig {
+func (i *api) rsa() *invoker.RsaConfig {
 	rsa := i.conf.RSA
 	if rsa.Expire > time.Now().UnixMilli() {
 		return &rsa
@@ -70,8 +70,8 @@ func (uploader *api) do(u string, f url.Values, result uploadResp) error {
 	req.Header.Set("accept", "application/json;charset=UTF-8")
 	req.Header.Set("SessionKey", uploader.session())
 
-	g := util.SHA1(util.EncodeParam(a), l)
-	req.Header.Set("Signature", hex.EncodeToString(g))
+	g := util.Sha1(util.EncodeParam(a), l)
+	req.Header.Set("Signature", g)
 	req.Header.Set("X-Request-Date", c)
 	req.Header.Set("X-Request-ID", r)
 

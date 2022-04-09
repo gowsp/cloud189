@@ -10,12 +10,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/gowsp/cloud189/pkg/drive"
 	"github.com/gowsp/cloud189/pkg/util"
 )
 
 type content struct {
-	user        *drive.User
+	user        *User
 	Referer     string
 	Captcha     string
 	RsaKey      string
@@ -91,7 +90,7 @@ type LoginResult struct {
 	SSON   string
 }
 
-func (i *Invoker) prepare(link string, params url.Values, user *drive.User) (result *content, err error) {
+func (i *Invoker) prepareLogin(link string, params url.Values, user *User) (result *content, err error) {
 	req, err := util.GetReq(link, params)
 	if err != nil {
 		return nil, err
@@ -108,8 +107,8 @@ func (i *Invoker) prepare(link string, params url.Values, user *drive.User) (res
 	return &content, nil
 }
 
-func (i *Invoker) PwdLogin(link string, params url.Values, user *drive.User) (result *LoginResult, err error) {
-	content, err := i.prepare(link, params, user)
+func (i *Invoker) PwdLogin(link string, params url.Values, user *User) (result *LoginResult, err error) {
+	content, err := i.prepareLogin(link, params, user)
 	if err != nil {
 		return nil, err
 	}
@@ -127,5 +126,6 @@ func (i *Invoker) PwdLogin(link string, params url.Values, user *drive.User) (re
 		return nil, errors.New(result.Msg)
 	}
 	result.SSON = util.FindCookieValue(resp.Cookies(), "SSON")
+	i.conf.SSON = result.SSON
 	return
 }

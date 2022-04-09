@@ -1,7 +1,6 @@
 package web
 
 import (
-	"github.com/gowsp/cloud189/pkg/drive"
 	"github.com/gowsp/cloud189/pkg/invoker"
 	"github.com/gowsp/cloud189/pkg/util"
 )
@@ -68,24 +67,24 @@ import (
 type api struct {
 	invoker    *invoker.Invoker
 	sessionKey string
-	conf       *drive.Config
+	conf       *invoker.Config
 }
 
 func NewApi(path string) *api {
-	conf, _ := drive.OpenConfig(path)
+	conf, _ := invoker.OpenConfig(path)
 	api := &api{conf: conf}
 	api.invoker = invoker.NewInvoker("https://cloud.189.cn/api", api.refresh, conf)
 	return api
 }
 
 func NewMemApi(username, password string) *api {
-	conf := &drive.Config{User: &drive.User{Name: username, Password: password}}
+	conf := &invoker.Config{User: &invoker.User{Name: username, Password: password}}
 	api := &api{conf: conf}
 	api.invoker = invoker.NewInvoker("https://cloud.189.cn/api", api.refresh, conf)
 	return api
 }
 
-func (i *api) login(user *drive.User) error {
+func (i *api) login(user *invoker.User) error {
 	result, err := i.invoker.PwdLogin("https://cloud.189.cn/api/portal/loginUrl.action", nil, user)
 	if err != nil {
 		return err

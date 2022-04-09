@@ -1,4 +1,4 @@
-package drive
+package invoker
 
 import (
 	"encoding/json"
@@ -26,16 +26,21 @@ func (r *RsaConfig) Encrypt(data string) []byte {
 	return d
 }
 
-type Config struct {
-	path       string
-	User       *User     `json:"user,omitempty"`
-	RSA        RsaConfig `json:"rsa,omitempty"`
-	SSON       string    `json:"sson,omitempty"`
-	Auth       string    `json:"auth,omitempty"`
-	SessionKey string    `json:"session_key,omitempty"`
+type Session struct {
+	Key    string `json:"key,omitempty"`
+	Secret string `json:"secret,omitempty"`
 }
 
-func defaultPath() string {
+type Config struct {
+	path    string
+	User    *User     `json:"user,omitempty"`
+	RSA     RsaConfig `json:"rsa,omitempty"`
+	SSON    string    `json:"sson,omitempty"`
+	Auth    string    `json:"auth,omitempty"`
+	Session *Session  `json:"session,omitempty"`
+}
+
+func DefaultPath() string {
 	dir := mkdir(".config", "cloud189")
 	return dir + "/config.json"
 }
@@ -59,7 +64,7 @@ func mkdir(dirs ...string) string {
 func OpenConfig(path string) (*Config, error) {
 	file := path
 	if file == "" {
-		file = defaultPath()
+		file = DefaultPath()
 	}
 	f, err := os.OpenFile(file, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {

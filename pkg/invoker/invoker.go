@@ -8,33 +8,29 @@ import (
 	"os"
 	"strings"
 	"time"
-
-	"github.com/gowsp/cloud189/pkg/drive"
 )
 
 type Invoker struct {
 	url     string
 	http    *http.Client
-	conf    *drive.Config
+	conf    *Config
+	prepare func(*http.Request)
 	refresh func() error
 }
 
-func New() *Invoker {
-	cookie, _ := cookiejar.New(nil)
-	client := http.Client{Jar: cookie}
-	return &Invoker{http: &client}
-}
-
-func NewInvoker(main string, refresh func() error, conf *drive.Config) *Invoker {
+func NewInvoker(apiUrl string, refresh func() error, conf *Config) *Invoker {
 	jar, _ := cookiejar.New(nil)
 	sson := []*http.Cookie{{Name: "SSON", Value: conf.SSON}}
 	user := []*http.Cookie{{Name: "COOKIE_LOGIN_USER", Value: conf.Auth}}
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "e.189.cn"}, sson)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
-	return &Invoker{url: main, refresh: refresh, http: &http.Client{Jar: jar}, conf: conf}
+	return &Invoker{url: apiUrl, refresh: refresh, http: &http.Client{Jar: jar}, conf: conf}
 }
 
+func (i *Invoker) SetPrepare(prepare func(req *http.Request)) {
+	i.prepare = prepare
+}
 func (i *Invoker) Cookies(url *url.URL) []*http.Cookie {
 	return i.http.Jar.Cookies(url)
 }
@@ -52,6 +48,9 @@ func (i *Invoker) Cookie(raw, name string) string {
 func (i *Invoker) Do(req *http.Request, data interface{}, retry int) error {
 	if retry == 0 {
 		return os.ErrInvalid
+	}
+	if i.prepare != nil {
+		i.prepare(req)
 	}
 	resp, err := i.http.Do(req)
 	// body, _ := httputil.DumpResponse(resp, true)
@@ -92,9 +91,6 @@ func (i *Invoker) Get(path string, params url.Values, data interface{}) error {
 }
 func (i *Invoker) Post(path string, params url.Values, data interface{}) error {
 	url := i.url + path
-	return i.PostForm(url, params, data)
-}
-func (i *Invoker) PostForm(url string, params url.Values, data interface{}) error {
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(params.Encode()))
 	if err != nil {
 		return err
