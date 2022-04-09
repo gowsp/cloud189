@@ -6,9 +6,9 @@ import (
 	"time"
 )
 
-type Space interface {
-	Available() uint64
-	Capacity() uint64
+type Space struct {
+	Available uint64 `json:"available,omitempty"`
+	Capacity  uint64 `json:"capacity,omitempty"`
 }
 
 type File interface {

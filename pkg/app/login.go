@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/gowsp/cloud189/pkg/drive"
 	"github.com/gowsp/cloud189/pkg/invoker"
 )
 
@@ -22,24 +21,29 @@ type userSession struct {
 	RefreshToken        string `json:"refreshToken,omitempty"`
 }
 
-func PwdLogin(username, password string) (err error) {
-	invoker := invoker.New()
+func (api *api) PwdLogin(username, password string) (err error) {
+	user := &invoker.User{Name: username, Password: password}
 	params := url.Values{}
 	params.Set("appId", "8025431004")
 	params.Set("clientType", "10020")
 	params.Set("timeStamp", strconv.FormatInt(time.Now().UnixMilli(), 10))
 	params.Set("returnURL", "https://m.cloud.189.cn/zhuanti/2020/loginErrorPc/index.html")
-	user := &drive.User{Name: username, Password: password}
-	resp, err := invoker.PwdLogin("https://cloud.189.cn/unifyLoginForPC.action", params, user)
+	resp, err := api.invoker.PwdLogin("https://cloud.189.cn/unifyLoginForPC.action", params, user)
 	if err != nil {
 		return err
 	}
 	var userSession userSession
 	params = url.Values{}
+	params.Set("redirectURL", resp.ToUrl)
+	addParams(&params)
+	err = api.invoker.Post("/getSessionForPC.action", params, &userSession)
+	api.conf.User = user
+	api.conf.Session = &invoker.Session{Key: userSession.SessionKey, Secret: userSession.SessionSecret}
+	return api.conf.Save()
+}
+
+func addParams(params *url.Values) {
 	params.Set("version", "6.4.1.0")
 	params.Set("clientType", "TELEPC")
 	params.Set("channelId", "web_cloud.189.cn")
-	params.Set("redirectURL", resp.ToUrl)
-	err = invoker.PostForm("https://api.cloud.189.cn/getSessionForPC.action", params, &userSession)
-	return
 }

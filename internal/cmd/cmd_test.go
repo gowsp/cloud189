@@ -19,10 +19,12 @@ func TestMkdir(t *testing.T) {
 }
 func TestUp(t *testing.T) {
 	RootCmd.SetArgs([]string{"up",
-		"../../LICENSE",
+		"cmd_test.go",
 		"fast://B4CC2601D293ECB814447B80C0ACEC8D:3071418/cloud189_fast.zip",
 		"https://github.com/gowsp/cloud189/releases/download/v0.4.3/cloud189_0.4.3_windows_amd64.zip",
-		"../../internal", "/demo/1/2"})
+		"../../internal",
+		 "/demo/1",
+	})
 	RootCmd.Execute()
 }
 func TestLs(t *testing.T) {

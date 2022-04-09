@@ -16,8 +16,8 @@ var dfCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		capacity := space.Capacity()
-		available := space.Available()
+		capacity := space.Capacity
+		available := space.Available
 		used := capacity - available
 		fmt.Printf("%-12s%-12s%-12s%s\n", "Size", "Used", "Avail", "Use%")
 		fmt.Printf("%-12s%-12s%-12s%.2f%%\n",

@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/gowsp/cloud189/pkg/app"
+	"github.com/gowsp/cloud189/pkg/invoker"
 	"github.com/spf13/cobra"
 )
 
@@ -10,7 +12,11 @@ var signCmd = &cobra.Command{
 	Use:   "sign",
 	Short: "sign",
 	Run: func(cmd *cobra.Command, args []string) {
-		if err := App().Sign(); err != nil {
+		if cfgFile == "" {
+			cfgFile = invoker.DefaultPath()
+		}
+		app := app.NewApi(cfgFile)
+		if err := app.Sign(); err != nil {
 			fmt.Println(err)
 		}
 	},
