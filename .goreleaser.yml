@@ -14,6 +14,18 @@ builds:
       - linux
       - darwin
       - windows
+    goarch:
+      - 386
+      - arm
+      - arm64
+      - amd64
+    goarm:
+      - 6
+      - 7
+    ignore:
+      - goos: windows
+        goarch: arm
+
 archives:
   - format_overrides:
       - goos: windows
