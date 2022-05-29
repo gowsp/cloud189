@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"sync"
 
@@ -25,7 +24,6 @@ func AddCommand(cmds ...*cobra.Command) {
 }
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 }
@@ -34,6 +32,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cloud189/config.json)")
 
 	RootCmd.AddCommand(loginCmd)
+	RootCmd.AddCommand(logoutCmd)
 	RootCmd.AddCommand(signCmd)
 	RootCmd.AddCommand(upCmd)
 	RootCmd.AddCommand(rmCmd)

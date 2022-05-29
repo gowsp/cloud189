@@ -10,7 +10,6 @@ import (
 var exitCmd = &cobra.Command{
 	Use:           "exit",
 	Short:         "exit",
-	Aliases:       []string{"logout"},
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(command *cobra.Command, args []string) error {

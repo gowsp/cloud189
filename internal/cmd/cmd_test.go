@@ -9,6 +9,10 @@ func TestLogin(t *testing.T) {
 	RootCmd.SetArgs([]string{"login"})
 	RootCmd.Execute()
 }
+func TestLogout(t *testing.T) {
+	RootCmd.SetArgs([]string{"logout", "-f"})
+	RootCmd.Execute()
+}
 func TestSign(t *testing.T) {
 	RootCmd.SetArgs([]string{"sign"})
 	RootCmd.Execute()
@@ -23,7 +27,7 @@ func TestUp(t *testing.T) {
 		"fast://B4CC2601D293ECB814447B80C0ACEC8D:3071418/cloud189_fast.zip",
 		"https://github.com/gowsp/cloud189/releases/download/v0.4.3/cloud189_0.4.3_windows_amd64.zip",
 		"../../internal",
-		 "/demo/1",
+		"/demo/1",
 	})
 	RootCmd.Execute()
 }

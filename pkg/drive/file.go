@@ -4,10 +4,6 @@ import (
 	"github.com/gowsp/cloud189/pkg"
 )
 
-
-
-
-
 func (f *Client) parse(path ...string) (files []pkg.File) {
 	for _, path := range path {
 		file, err := f.Stat(path)
