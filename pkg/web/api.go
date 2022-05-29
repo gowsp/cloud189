@@ -1,6 +1,8 @@
 package web
 
 import (
+	"errors"
+
 	"github.com/gowsp/cloud189/pkg/invoker"
 	"github.com/gowsp/cloud189/pkg/util"
 )
@@ -111,6 +113,9 @@ func (i *api) refresh() error {
 		i.conf.Auth = user.Value
 		i.conf.Save()
 		return nil
+	}
+	if i.conf.User == nil {
+		return errors.New("no user info in config, please login first")
 	}
 	return i.Login(i.conf.User.Name, i.conf.User.Password)
 }
