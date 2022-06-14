@@ -2,8 +2,10 @@ package invoker
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
@@ -53,8 +55,11 @@ func (i *Invoker) Do(req *http.Request, data interface{}, retry int) error {
 		i.prepare(req)
 	}
 	resp, err := i.http.Do(req)
-	// body, _ := httputil.DumpResponse(resp, true)
-	// fmt.Println(string(body))
+	val := os.Getenv("189_MODE")
+	if val == "1" {
+		body, _ := httputil.DumpResponse(resp, true)
+		fmt.Println(string(body))
+	}
 	if err != nil || resp.StatusCode == http.StatusBadRequest {
 		time.Sleep(time.Millisecond * 200)
 		err := i.refresh()

@@ -2,11 +2,15 @@ package app
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/gowsp/cloud189/pkg/invoker"
 )
 
+func init() {
+	os.Setenv("189_MODE", "1")
+}
 func TestLogin(t *testing.T) {
 	NewApi(invoker.DefaultPath()).PwdLogin("xxxxxxx", "xxxxxxxxxxx")
 }
