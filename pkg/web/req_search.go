@@ -22,12 +22,12 @@ func (c *api) FindDir(id, name string) (pkg.File, error) {
 	})
 }
 func (c *api) FindFile(id, name string) (pkg.File, error) {
-	return cache.Find(id, name, func() ([]*fileResp, error) {
+	return cache.Find(id, name, func() ([]*file.FileInfo, error) {
 		return c.search(id, name, 1)
 	})
 }
 
-func (c *api) search(id, name string, page int) (result []*fileResp, err error) {
+func (c *api) search(id, name string, page int) (result []*file.FileInfo, err error) {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("pageNum", strconv.Itoa(page))
@@ -44,7 +44,7 @@ func (c *api) search(id, name string, page int) (result []*fileResp, err error) 
 	}
 	result = append(result, files.files(id)...)
 	if page*100 < files.Count {
-		var more []*fileResp
+		var more []*file.FileInfo
 		more, err = c.search(id, name, page+1)
 		result = append(result, more...)
 	}
