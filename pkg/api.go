@@ -35,8 +35,6 @@ type Api interface {
 
 	FindFile(id, name string) (File, error)
 
-	Detail(id string) (File, error)
-
 	ListFile(id string) ([]File, error)
 
 	Mkdir(parentId, path string, parents bool) error
