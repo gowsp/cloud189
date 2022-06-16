@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>开放平台-文档</title>
+    <meta name="viewport"
+          content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
+    <meta name="apple-touch-fullscreen" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="format-detection" content="telephone=no">
+    <link rel="stylesheet" href="css/apicontent.css">
+</head>
+<body>
+<div class="api-content">
+    <p class="api-title">
+        获取文件信息
+    </p>
+    <div class="api-dir clearfix">
+        <a class="switch-dir" id="switch-dir" href="javascript:;">[<strong class="text">隐藏</strong>]</a>
+        <div class="dir-content" id="dir-content">
+            <p class="dir-title">
+                目录
+            </p>
+            <ul class="dir-list list-paddingleft-2" id="dir-list">
+                <li class="dir-item">
+                    <p>
+                        <a href="#desc">1 接口说明</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#url">2 接口URL</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#format">3 支持格式</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#request-type">4 HTTP请求方式</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#request-headers">5 请求Headers</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#request-params">6 请求参数</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#request-demo">7 请求样例</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#response-params">8 返回参数</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#response-demo">9 返回样例</a>
+                    </p>
+                </li>
+                <li class="dir-item">
+                    <p>
+                        <a href="#other">10 其它</a>
+                    </p>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="api-detail" id="desc">
+        <p class="detail-title">
+            1.接口说明
+        </p>
+        <p class="detail-text">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 14px;">获取指定的文件信息。</span>
+        </p>
+    </div>
+    <div class="api-detail" id="url">
+        <p class="detail-title">
+            2.接口URL
+        </p>
+        <p class="detail-text">
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 14px;">http://api.cloud.189.cn/getFileInfo.action</span>
+        </p>
+    </div>
+    <div class="api-detail" id="format">
+        <p class="detail-title">
+            3.支持格式
+        </p>
+        <p class="detail-text">
+            <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 14px;">xml</span></strong>
+        </p>
+    </div>
+    <div class="api-detail" id="request-type">
+        <p class="detail-title">
+            4.HTTP请求方式
+        </p>
+        <p class="detail-text">
+            <strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 14px;">GET</span></strong>
+        </p>
+    </div>
+    <div class="api-detail" id="request-headers">
+        <p class="detail-title">
+            5.请求Headers
+        </p>
+        <p class="detail-text">
+            <br/>
+        </p>
+        <table class="detail-table">
+            <thead>
+                <tr class="name firstRow">
+                    <th width="100">
+                        字段标识
+                    </th>
+                    <th width="350">
+                        说明
+                    </th>
+                    <th width="80">
+                        数据类型
+                    </th>
+                    <th width="80">
+                        长度(字节)
+                    </th>
+                    <th width="40">
+                        可空
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="name">
+                        AccessToken
+                    </td>
+                    <td>
+                        OAuth2 Access Token
+                    </td>
+                    <td>
+                        String
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">
+                        Signature
+                    </td>
+                    <td>
+                        请求签名
+                    </td>
+                    <td>
+                        String
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">
+                        Date
+                    </td>
+                    <td>
+                        请求日期和时间。例如：Wed, 01 Mar 2009 12:00:00 GMT
+                    </td>
+                    <td>
+                        String
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="api-detail" id="request-params">
+        <p class="detail-title">
+            6.请求参数
+        </p>
+        <p class="detail-text">
+            <span style="font-size: 14px;">注：fileId或filePath，至少有一个必须非空；如果都存在，fileId参数有效。</span><br/>
+        </p>
+        <table class="detail-table">
+            <thead>
+                <tr class="name firstRow">
+                    <th width="100">
+                        字段标识
+                    </th>
+                    <th width="350">
+                        说明
+                    </th>
+                    <th width="80">
+                        数据类型
+                    </th>
+                    <th width="80">
+                        长度(字节)
+                    </th>
+                    <th width="40">
+                        可空
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="name">
+                        fileId
+                    </td>
+                    <td>
+                        文件ID
+                    </td>
+                    <td>
+                        Long
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">
+                        folderPath
+                    </td>
+                    <td>
+                        文件夹路径，以 / 分隔
+                    </td>
+                    <td>
+                        String
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">
+                        mediaAttr
+                    </td>
+                    <td>
+                        文件媒体属性选项
+						0或空：不获取
+						1：获取
+                    </td>
+                    <td>
+                        Integer
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td class="name">
+                        iconOption
+                    </td>
+                    <td>
+                        获取文件缩略图选项
+						0或空-不获取缩略图
+						1：获取小尺寸缩略图(80max)
+						2：获取中尺寸缩略图(160max)
+						4：获取大尺寸缩略图(320max)
+						8 ：600max缩略图
+						各种尺寸缩略图选项可采用叠加方式同时存在
+                    </td>
+                    <td>
+                        Integer
+                    </td>
+                    <td></td>
+                    <td>
+                        N
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="api-detail" id="request-demo">
+        <p class="detail-title">
+            7.请求样例
+        </p>
+        <div class="detail-code">
+            <pre><span style="font-size: 14px;">GET /getFileInfo.action HTTP/1.1
+Host: api.cloud.189.cn
+Date: date
+AccessToken: key
+Signature: signature</span></pre>
+        </div>
+    </div>
+    <div class="api-detail" id="response-params">
+        <p class="detail-title">
+            8.返回参数
+        </p>
+        <p class="detail-text">
+            <br/>
+        </p>
+        <table height="245" class="detail-table">
+            <thead>
+                <tr class="firstRow">
+                    <th width="148">
+                        字段标识
+                    </th>
+                    <th width="474">
+                        说明
+                    </th>
+                    <th width="80">
+                        数据类型
+                    </th>
+                    <th width="80">
+                        长度(字节)
+                    </th>
+                    <th width="40">
+                        可空
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td width="48" class="name">
+                        fileInfo
+                    </td>
+                    <td width="474">
+                        文件信息元素容器
+                    </td>
+                    <td width="103">
+                        Container
+                    </td>
+                    <td width="98"></td>
+                    <td width="74">
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —id
+                    </td>
+                    <td width="474">
+                        
+						文件Id
+                    </td>
+                    <td width="103">
+                        Long
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="151" class="name" style="-ms-word-break: break-all;">
+                        —parentFolderId
+                    </td>
+                    <td width="474">
+                        
+						父文件夹Id
+                    </td>
+                    <td width="103">
+                        Long
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —path
+                    </td>
+                    <td width="474">
+                        
+						文件路径
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —name
+                    </td>
+                    <td width="474">
+                        
+						文件名称
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —size
+                    </td>
+                    <td width="474">
+                        
+						文件大小
+                    </td>
+                    <td width="103">
+                        Long
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —md5
+                    </td>
+                    <td width="474">
+                        
+						文件的MD5码
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —createDate
+                    </td>
+                    <td width="474">
+                        
+						文件夹创建日期(YYYY-MM-DD hh:mm:ss)
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —lastOpTime
+                    </td>
+                    <td width="474">
+                        
+						文件夹最后操作时间(YYYY-MM-DD hh:mm:ss)
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —mediaType
+                    </td>
+                    <td width="474">
+                        
+						文件媒体类型，0到1个
+						1：图片
+						2：音乐
+						3：视频
+						4：文档
+                    </td>
+                    <td width="103">
+                        Integer
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —rev
+                    </td>
+                    <td width="474">
+                        
+						文件夹版本号
+                    </td>
+                    <td width="103">
+                        Long
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —fileDownloadUrl
+                    </td>
+                    <td width="474">
+                        
+						文件下载地址
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —mediaAttr
+                    </td>
+                    <td width="474">
+                        
+						文件媒体属性元素容器，0个到多个
+                    </td>
+                    <td width="103">
+                        Container
+                    </td>
+                    <td width="98"></td>
+                    <td width="74">
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——streamKind
+                    </td>
+                    <td width="474">
+                        
+						媒体类型
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——name
+                    </td>
+                    <td width="474">
+                        
+						媒体属性名称
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——value
+                    </td>
+                    <td width="474">
+                        
+						媒体属性值
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        —icon
+                    </td>
+                    <td width="474">
+                        
+						文件夹缩略图元素容器，0到1个
+                    </td>
+                    <td width="103">
+                        Container
+                    </td>
+                    <td width="98"></td>
+                    <td width="74">
+                        N
+                    </td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——smallUrl
+                    </td>
+                    <td width="474">
+                        
+						小尺寸缩略图URL(80max)
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——mediumUrl
+                    </td>
+                    <td width="474">
+                        
+						中尺寸缩略图URL(160max)
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——largeUrl
+                    </td>
+                    <td width="474">
+                        
+						大尺寸缩略图URL(320max)
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+                <tr>
+                    <td width="48" class="name" style="-ms-word-break: break-all;">
+                        ——max600
+                    </td>
+                    <td width="474">
+                        
+						600max缩略图
+                    </td>
+                    <td width="103">
+                        String
+                    </td>
+                    <td width="98"></td>
+                    <td width="74"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="api-detail" id="response-demo">
+        <p class="detail-title">
+            9.返回样例
+        </p>
+        <div class="detail-code">
+            <pre><span style="font-size: 14px;">正确返回样例：			100-11/我的文档/测试文档/测试.txt测试.txt10241F3870BE274F6C49B3E31A0C6728957F2011-03-24 09:00:002011-03-24 09:00:0020110324090000</span></pre>
+            <p class="detail-text">
+                <br/>
+            </p>
+            <pre><span style="font-size: 14px;">错误返回样例：无</span></pre>
+        </div>
+    </div>
+    <div class="api-detail" id="other">
+        <p class="detail-title">
+            10.其它
+        </p>
+        <p class="detail-text">
+            
+			&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="font-size: 14px;">无</span>
+        </p>
+    </div>
+</div>
+<script src="js/jquery.js"></script>
+<script src="js/iframe-child.js"></script>
+</body>
+</html>
