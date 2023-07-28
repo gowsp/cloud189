@@ -15,7 +15,7 @@ type Invoker struct {
 	http    *http.Client
 	conf    *Config
 	prepare func(*http.Request)
-	refresh func() error
+	Refresh func() error
 }
 
 func NewInvoker(apiUrl string, refresh func() error, conf *Config) *Invoker {
@@ -25,7 +25,7 @@ func NewInvoker(apiUrl string, refresh func() error, conf *Config) *Invoker {
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "e.189.cn"}, sson)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "cloud.189.cn"}, user)
 	jar.SetCookies(&url.URL{Scheme: "https", Host: "m.cloud.189.cn"}, user)
-	return &Invoker{url: apiUrl, refresh: refresh, http: &http.Client{Jar: jar}, conf: conf}
+	return &Invoker{url: apiUrl, Refresh: refresh, http: &http.Client{Jar: jar}, conf: conf}
 }
 
 func (i *Invoker) SetPrepare(prepare func(req *http.Request)) {
@@ -57,7 +57,7 @@ func (i *Invoker) Do(req *http.Request, data interface{}, retry int) error {
 	// fmt.Println(string(body))
 	if err != nil || resp.StatusCode == http.StatusBadRequest {
 		time.Sleep(time.Millisecond * 200)
-		err := i.refresh()
+		err := i.Refresh()
 		if err != nil {
 			return err
 		}

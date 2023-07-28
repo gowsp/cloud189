@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"time"
 
 	"github.com/gowsp/cloud189/pkg"
 )
@@ -29,9 +30,14 @@ func (a *api) signReq(url string) {
 	req, _ := http.NewRequest(http.MethodGet, url, nil)
 	err := a.invoker.Do(req, &e, 3)
 	if err == nil {
-		if e.ErrorCode == "User_Not_Chance" {
+		switch e.ErrorCode {
+		case "User_Not_Chance":
 			log.Println("signed")
-		} else {
+		case "TimeOut":
+			time.Sleep(time.Millisecond * 200)
+			a.invoker.Refresh()
+			a.signReq(url)
+		default:
 			log.Printf("obtain: %s" + e.PrizeName)
 		}
 	} else {
