@@ -24,7 +24,7 @@ type userSession struct {
 func (api *api) PwdLogin(username, password string) (err error) {
 	user := &invoker.User{Name: username, Password: password}
 	params := url.Values{}
-	params.Set("appId", "8025431004")
+	params.Set("appId", "9317140619")
 	params.Set("clientType", "10020")
 	params.Set("timeStamp", strconv.FormatInt(time.Now().UnixMilli(), 10))
 	params.Set("returnURL", "https://m.cloud.189.cn/zhuanti/2020/loginErrorPc/index.html")
