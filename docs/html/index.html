@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>开放平台-文档</title>
+
+    <meta name="viewport"
+
+          content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height">
+
+    <meta name="apple-touch-fullscreen" content="yes">
+
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+
+    <meta name="format-detection" content="telephone=no">
+
+    <link rel="stylesheet" href="css/apicontent.css">
+
+</head>
+
+<body>
+
+<div class="api-content"><p class="api-title">REST API定义</p><div class="api-dir clearfix"><a id="switch-dir" class="switch-dir" href="javascript:;">[<strong class="text">隐藏</strong>]</a><div id="dir-content" class="dir-content"><p class="dir-title">目录</p><ul id="dir-list" class="dir-list list-paddingleft-2"><li class="dir-item"><p><a href="#1">1 通用请求头</a></p></li><li class="dir-item"><p><a href="#2">2 通用响应头</a></p></li><li class="dir-item"><p><a href="#3">3 请求签名</a></p></li><li class="dir-item"><p><a href="#4">4 用户接口</a></p></li><li class="dir-item"><p><a href="#5">5 文件接口</a></p></li><li class="dir-item"><p><a href="#6">6 分享接口</a></p></li><li class="dir-item"><p><a href="#7">7 营销接口</a></p></li></ul></div></div><div id="1" class="api-detail"><p class="detail-title">1.通用请求头</p><div id="request-params" class="api-detail"><table class="detail-table" height="345" width="926"><thead><tr class="firstRow"><th>
+
+							Header名称</th><th>描述</th><th>必要性</th></tr></thead><tbody><tr><td class="name">AccessToken</td><td>OAuth2 Access Token</td><td>必要</td></tr><tr><td class="name">Date</td><td>请求日期和时间。例如：Wed, 01 Mar 2009 12:00:00 GMT
+
+						 &nbsp; 类型：String
+
+							默认值：无</td><td>必要</td></tr><tr><td class="name">Host</td><td>用于指定被请求资源的Internet主机和端口号，通常从请求HTTP URL中自动提取
+
+						类型：String
+
+						默认值：无</td><td>必要</td></tr><tr><td class="name">Content_Length</td><td>消息（不包括头部）长度
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Content-Type</td><td>内容媒体类型，如text/plain
+
+							类型：String
+
+							默认值：无</td><td>可选</td></tr><tr><td class="name">EDrive-BaseFileId</td><td>要修改的源文件Id
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Edrive-FileMD5</td><td>文件MD5码
+
+						类型：String
+
+						默认值：无</td><td>条件</td></tr><tr><td class="name">Edrive-FileName</td><td>上传文件名
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Edrive-FileLength</td><td>上传文件数据实际长度
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Edrive-UploadFileId</td><td>断点续传文件Id
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Edrive-ParentFolderId</td><td>上传文件父目录Id
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr><tr><td class="name">Signature</td><td>请求签名
+
+							类型：String
+
+							默认值：无</td><td>条件</td></tr></tbody></table></div></div><div id="2" class="api-detail"><p class="detail-title">
+
+			2.通用响应头</p><div id="request-params" class="api-detail"><table class="detail-table" height="145" width="926"><thead><tr class="firstRow"><th><p>Header名称</p></th><th>描述</th></tr></thead><tbody><tr><td class="name">
+
+							Content-Length</td><td>
+
+							响应体字节长度（不包括头部）。
+
+								类型：String
+
+								默认值：无</td></tr><tr><td class="name">
+
+							Connection</td><td>
+
+							指明与服务端的当前连接状态为open或close。
+
+								类型：String
+
+								默认值：无</td></tr><tr><td class="name">
+
+							Date</td><td>
+
+							响应日期和时间。例如：Wed, 01 Mar 2009 12:00:00 GMT
+
+								类型：String
+
+								默认值：无</td></tr><tr><td class="name">
+
+							Server</td><td>
+
+							产生响应的服务器名称。
+
+								类型：String
+
+								默认值：无</td></tr></tbody></table></div></div><div id="3" class="api-detail" style="clear:both;"><p class="detail-title">3.请求签名</p><div class="detail-code"><pre>Signature=hmac_sha1(“AccessToken=相应的值&amp;Operate=相应值&amp;RequestURI=相应值&amp;Date=相应的值”,&nbsp;AppSecret)
+
+AccessToken：OAuth2&nbsp;Access&nbsp;Token
+
+AppSecret：应用Secret
+
+Operate：HTTP请求方法，如“PUT”、“GET”或“DELETE”字符串
+
+RequestURI：HTTP请求资源路径
+
+Date：请求时间</pre></div></div><div id="4" class="api-detail"><p class="detail-title">4.用户接口</p><p class="detail-text"><br/></p><table class="detail-table"><tbody><tr class="firstRow"><td class="name" width="300"><a href="api_detail_123.html">获取用户基本信息(点击查看)</a></td><td><a href="api_detail_123.html">http://api.cloud.189.cn/getUserInfo.action</a></td></tr><tr><td class="name"><a href="api_detail_129.html">获取用户扩展信息(点击查看)</a></td><td><a href="api_detail_129.html">http://api.cloud.189.cn/getUserInfoExt.action</a></td></tr><tr><td class="name"><a href="api_detail_125.html">上传用户头像(点击查看)</a></td><td><a href="api_detail_125.html">http://api.cloud.189.cn/uploadUserHeadPortrait.action</a></td></tr><tr><td class="name"><a href="api_detail_127.html">设置用户扩展信息(点击查看)</a></td><td><a href="api_detail_127.html">http://api.cloud.189.cn/updateUserInfoExt.action</a></td></tr></tbody></table></div><div id="5" class="api-detail"><p class="detail-title">5.文件接口</p><p class="detail-text"><br/></p><table class="detail-table"><tbody><tr class="firstRow"><td class="name" width="300"><a href="api_detail_135.html">获取文件列表(点击查看)</a></td><td><a href="api_detail_135.html">http://api.cloud.189.cn/listFiles.action</a></td></tr><tr><td class="name"><a href="api_detail_137.html">获取文件夹信息(点击查看)</a></td><td><a href="api_detail_137.html">http://api.cloud.189.cn/getFolderInfo.action</a></td></tr><tr><td class="name"><a href="api_detail_139.html">获取文件信息(点击查看)</a></td><td><a href="api_detail_139.html">http://api.cloud.189.cn/getFileInfo.action</a></td></tr><tr><td class="name"><a href="api_detail_141.html" target="_self" textvalue="文件搜索(点击查看)">文件搜索(点击查看)</a></td><td><a href="api_detail_141.html">http://api.cloud.189.cn/searchFiles.action</a></td></tr><tr class="firstRow"><td class="name"><a href="api_detail_143.html">获取文件下载地址(点击查看)</a></td><td><a href="api_detail_143.html">http://api.cloud.189.cn/getFileDownloadUrl.action</a></td></tr><tr><td class="name"><a href="api_detail_145.html">批量获取文件下载地址(点击查看)</a></td><td><a href="api_detail_145.html">http://api.cloud.189.cn/batchGetFileDownloadUrl.action</a></td></tr><tr><td class="name"><a href="api_detail_147.html">创建文件夹(点击查看)</a></td><td><a href="api_detail_147.html">http://api.cloud.189.cn/createFolder.action</a></td></tr><tr><td class="name"><a href="api_detail_149.html">上传并创建文件（一次性PUT上传）(点击查看)</a></td><td><a href="api_detail_149.html">http://upload.cloud.189.cn/uploadFile.action</a></td></tr><tr><td class="name"><a href="api_detail_151.html">创建上传文件（断点续传）(点击查看)</a></td><td><a href="api_detail_151.html">http://api.cloud.189.cn/createUploadFile.action</a></td></tr><tr><td class="name"><a href="api_detail_153.html">获取上传文件状态（断点续传）(点击查看)</a></td><td><a href="api_detail_153.html">http://api.cloud.189.cn/getUploadFileStatus.action</a></td></tr><tr><td class="name"><a href="api_detail_155.html">上传文件数据（断点续传）(点击查看)</a></td><td><a href="api_detail_155.html">使用创建上传文件接口和获取上传文件状态接口响应中的确认文件上传完成URL</a></td></tr><tr><td class="name"><a href="api_detail_157.html">确认上传文件完成（断点续传）(点击查看)</a></td><td><a href="api_detail_157.html">使用创建上传文件接口和获取上传文件状态接口响应中的确认文件上传完成URL</a></td></tr><tr><td class="name"><a href="api_detail_159.html">重命名文件夹(点击查看)</a></td><td><a href="api_detail_159.html">http://api.cloud.189.cn/renameFolder.action</a></td></tr><tr><td class="name"><a href="api_detail_161.html">重命名文件(点击查看)</a></td><td><a href="api_detail_161.html">http://api.cloud.189.cn/renameFile.action</a></td></tr><tr><td class="name"><a href="api_detail_163.html">复制文件(点击查看)</a></td><td><a href="api_detail_163.html">http://api.cloud.189.cn/copyFile.action</a></td></tr><tr><td class="name"><a href="api_detail_165.html">移动文件夹(点击查看)</a></td><td><a href="api_detail_165.html">http://api.cloud.189.cn/moveFolder.action</a></td></tr><tr><td class="name"><a href="api_detail_167.html">移动文件(点击查看)</a></td><td><a href="api_detail_167.html">http://api.cloud.189.cn/moveFile.action</a></td></tr><tr><td class="name"><a href="api_detail_169.html">删除文件夹(点击查看)</a></td><td><a href="api_detail_169.html">http://api.cloud.189.cn/deleteFolder.action</a></td></tr><tr><td class="name"><a href="api_detail_171.html">删除文件(点击查看)</a></td><td><a href="api_detail_171.html">http://api.cloud.189.cn/deleteFile.action</a></td></tr></tbody></table></div><div id="6" class="api-detail"><p class="detail-title">6.分享接口</p><p class="detail-text"><br/></p><table class="detail-table"><tbody><tr class="firstRow"><td class="name" width="300"><a href="api_detail_173.html">生成文件分享链接(点击查看)</a></td><td><a href="api_detail_173.html">http://api.cloud.189.cn/createShareLink.action</a></td></tr></tbody></table></div><div id="7" class="api-detail"><p class="detail-title">7.营销接口</p><p class="detail-text"><br/></p><table class="detail-table"><tbody><tr class="firstRow"><td class="name" width="300"><a href="api_detail_175.html">用户签到检查(点击查看)</a></td><td><a href="api_detail_175.html">http://api.cloud.189.cn/mkt/userSignCheck.action</a></td></tr><tr class="firstRow"><td class="name"><a href="api_detail_177.html">用户签到(点击查看)</a></td><td><a href="api_detail_177.html">http://api.cloud.189.cn/mkt/userSign.action</a></td></tr></tbody></table></div></div>
+
+<script src="js/jquery.js"></script>
+
+<script src="js/iframe-child.js"></script>
+
+</body>
+
+</html>
