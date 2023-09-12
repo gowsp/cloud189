@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
 	"github.com/gowsp/cloud189/pkg/file"
@@ -14,8 +15,9 @@ func New(api pkg.DriveApi) pkg.Drive {
 }
 
 type FS struct {
-	root pkg.File
-	api  pkg.DriveApi
+	root  pkg.File
+	api   pkg.DriveApi
+	share sync.Map
 }
 
 func (f *FS) Login(username, password string) error {

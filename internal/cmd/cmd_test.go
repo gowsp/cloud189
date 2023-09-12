@@ -65,3 +65,8 @@ func TestWebDav(t *testing.T) {
 	RootCmd.SetArgs([]string{"webdav", ":8080"})
 	RootCmd.Execute()
 }
+func TestShare(t *testing.T) {
+	os.Setenv("Debug", "1")
+	RootCmd.SetArgs([]string{"share", ":8080", "/home"})
+	RootCmd.Execute()
+}

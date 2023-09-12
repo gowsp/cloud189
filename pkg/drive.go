@@ -17,6 +17,7 @@ type Drive interface {
 	Upload(cloud string, locals ...string) error
 	UploadFrom(file Upload) error
 	Download(local string, cloud ...string) error
+	Share(prifix, cloud string) (func(http.ResponseWriter, *http.Request), error)
 }
 
 type FileType uint16
