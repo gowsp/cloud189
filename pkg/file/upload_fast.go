@@ -1,11 +1,8 @@
-package drive
+package file
 
 import (
-	"fmt"
-	"os"
 	"regexp"
 	"strconv"
-	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
 )
@@ -16,40 +13,30 @@ func IsFastFile(name string) bool {
 }
 
 type FastFile struct {
-	once      sync.Once
-	client    pkg.Uploader
 	parentId  string
-	uploadId  string
 	name      string
-	fileMd5   string
 	size      int64
+	fileMd5   string
 	overwrite bool
 }
 
-func NewFastFile(parentId, url string, client pkg.Uploader) *FastFile {
+func NewFastFile(parentId, url string) pkg.Upload {
 	reg := regexp.MustCompile(`^fast://(\w+):(\d+)/(.+)`)
 	params := reg.FindSubmatch([]byte(url))
-	size, err := strconv.ParseInt(string(params[2]), 10, 0)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	size, _ := strconv.ParseInt(string(params[2]), 10, 0)
 	return &FastFile{
 		parentId: parentId,
-		client:   client,
 		name:     string(params[3]),
 		fileMd5:  string(params[1]),
 		size:     size,
 	}
 }
-func (f *FastFile) Upload() {
-	f.client.Upload(f, nil)
-}
-func (f *FastFile) Prepare(init func()) {
-	f.once.Do(init)
-}
+
 func (f *FastFile) ParentId() string {
 	return f.parentId
+}
+func (f *FastFile) LazyCheck() bool {
+	return false
 }
 func (f *FastFile) Name() string {
 	return f.name
@@ -61,7 +48,7 @@ func (f *FastFile) Size() int64 {
 	return f.size
 }
 func (f *FastFile) SliceNum() int {
-	return 1
+	return 0
 }
 func (f *FastFile) FileMD5() string {
 	return f.fileMd5
@@ -69,20 +56,6 @@ func (f *FastFile) FileMD5() string {
 func (f *FastFile) SliceMD5() string {
 	return f.fileMd5
 }
-func (f *FastFile) SetExists(exists bool) {
-}
-func (f *FastFile) IsExists() bool {
-	return true
-}
-func (f *FastFile) Type() string {
-	return "FAST"
-}
-func (f *FastFile) IsComplete() bool {
-	return true
-}
-func (f *FastFile) UploadId() string {
-	return f.uploadId
-}
-func (f *FastFile) SetUploadId(uploadId string) {
-	f.uploadId = uploadId
+func (f *FastFile) Part(int64) pkg.UploadPart {
+	return nil
 }

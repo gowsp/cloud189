@@ -21,7 +21,7 @@ func (h *CloudFileSystem) stripPrefix(p string) (string, int, error) {
 	return p, http.StatusNotFound, errPrefixMismatch
 }
 
-func (h *CloudFileSystem) Copy(w http.ResponseWriter, r *http.Request) (status int, err error) {
+func (h *CloudFileSystem) handleCopyMove(w http.ResponseWriter, r *http.Request) (status int, err error) {
 	hdr := r.Header.Get("Destination")
 	if hdr == "" {
 		return http.StatusBadRequest, errInvalidDestination

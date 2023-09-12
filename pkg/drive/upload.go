@@ -1,65 +1,79 @@
 package drive
 
 import (
-	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
-func (client *Client) Upload(cloud string, locals ...string) error {
-	dir, err := client.Stat(cloud)
+func (client *FS) UploadFrom(file pkg.Upload) error {
+	uploader := client.api.Uploader()
+	return uploader.Write(file)
+}
+func (client *FS) Upload(cloud string, locals ...string) error {
+	dir, err := client.stat(cloud)
 	if len(locals) > 1 || os.IsNotExist(err) {
-		client.Mkdir(cloud[1:], true)
-		dir, _ = client.Stat(cloud)
+		client.Mkdir(cloud[1:])
+		dir, _ = client.stat(cloud)
 	}
+	up := make([]pkg.Upload, 0)
 	for _, local := range locals {
-		if IsNetFile(local) {
-			f := NewNetFile(dir.Id(), local, client.api)
-			f.Upload()
+		if file.IsNetFile(local) {
+			up = append(up, file.NewURLFile(dir.Id(), local))
 			continue
 		}
-		if IsFastFile(local) {
-			f := NewFastFile(dir.Id(), local, client.api)
-			f.Upload()
+		if file.IsFastFile(local) {
+			u := file.NewFastFile(dir.Id(), local)
+			up = append(up, u)
 			continue
 		}
-		client.uploadLocal(dir.Id(), cloud, local)
+		files, _ := client.uploadLocal(dir, cloud, local)
+		up = append(up, files...)
+	}
+	uploader := client.api.Uploader()
+	for _, v := range up {
+		err := uploader.Write(v)
+		if err != nil {
+			log.Println(err)
+		}
 	}
 	return nil
 }
 
-func (client *Client) uploadLocal(parentId, cloud, local string) error {
-	dirs := make([]string, 0)
-	files := make([]FilePath, 0)
+func (client *FS) uploadLocal(parent pkg.File, cloud, local string) ([]pkg.Upload, error) {
+	stat, err := os.Stat(local)
+	if err != nil {
+		return nil, err
+	}
+	up := make([]pkg.Upload, 0)
+	if !stat.IsDir() {
+		up = append(up, file.NewLocalFile(parent.Id(), local))
+		return up, nil
+	}
+	dirs := map[string]string{
+		".": parent.Id(),
+	}
 	filepath.WalkDir(local, func(path string, d fs.DirEntry, err error) error {
-		rel, err := filepath.Rel(local, path)
-		rel = filepath.ToSlash(rel)
+		if err != nil {
+			return err
+		}
 		if d.IsDir() {
+			rel := file.Rel(local, path)
 			if rel == "." {
 				return nil
 			}
-			dirs = append(dirs, rel)
-		} else {
-			info, err := d.Info()
-			if err != nil {
-				return err
-			}
-			rel = filepath.ToSlash(filepath.Dir(rel))
-			files = append(files, FilePath{CloudPath: rel, LocalPath: path, FileInfo: info})
+			f, _ := client.api.Mkdir(parent, rel)
+			dirs[rel] = f.Id()
+			return nil
 		}
+		dir, _ := filepath.Split(path)
+		rel := file.Rel(local, dir)
+		up = append(up, file.NewLocalFile(dirs[rel], path))
 		return err
 	})
-	dir, err := client.api.Mkdirs(parentId, dirs...)
-	if err != nil {
-		return err
-	}
-	dir["."] = parentId
-	for _, f := range files {
-		i := NewLocalFile(dir[f.CloudPath].(string), &f, client.api)
-		if err := i.Upload(); err != nil {
-			fmt.Println(err)
-		}
-	}
-	return nil
+	return up, nil
 }

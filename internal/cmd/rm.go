@@ -19,7 +19,7 @@ var rmCmd = &cobra.Command{
 			fmt.Println(err)
 			return
 		}
-		if err := App().Remove(args...); err != nil {
+		if err := App().Delete(args...); err != nil {
 			fmt.Println(err)
 		}
 	},

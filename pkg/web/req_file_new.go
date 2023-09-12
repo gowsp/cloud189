@@ -39,6 +39,11 @@ type uploadInfo struct {
 	UploadFileId   string `json:"uploadFileId,omitempty"`
 	FileDataExists int    `json:"fileDataExists,omitempty"`
 }
+
+func (i *uploadInfo) IsExists() bool {
+	return i.FileDataExists == 1
+}
+
 type initResp struct {
 	Code string     `json:"code,omitempty"`
 	Data uploadInfo `json:"data,omitempty"`

@@ -15,7 +15,7 @@ var signCmd = &cobra.Command{
 		if cfgFile == "" {
 			cfgFile = invoker.DefaultPath()
 		}
-		app := app.NewApi(cfgFile)
+		app := app.New(cfgFile)
 		if err := app.Sign(); err != nil {
 			fmt.Println(err)
 		}

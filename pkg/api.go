@@ -16,6 +16,7 @@ type File interface {
 	PId() string
 	os.FileInfo
 }
+
 type FileExt struct {
 	FileCount   int64
 	CreateTime  time.Time
@@ -35,8 +36,6 @@ type Api interface {
 
 	FindFile(id, name string) (File, error)
 
-	Detail(id string) (File, error)
-
 	ListFile(id string) ([]File, error)
 
 	Mkdir(parentId, path string, parents bool) error
@@ -53,11 +52,11 @@ type Api interface {
 
 	Download(file File, start int64) (*http.Response, error)
 
-	Uploader
+	ReadWriter
 }
 
 type App interface {
-	Uploader() Uploader
+	Uploader() ReadWriter
 
 	Login(name, password string) error
 

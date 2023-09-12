@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"os"
 	"testing"
 )
 
@@ -60,6 +61,7 @@ func TestDf(t *testing.T) {
 	RootCmd.Execute()
 }
 func TestWebDav(t *testing.T) {
+	os.Setenv("Debug", "1")
 	RootCmd.SetArgs([]string{"webdav", ":8080"})
 	RootCmd.Execute()
 }

@@ -1,6 +1,8 @@
 package pkg
 
-import "io"
+import (
+	"io"
+)
 
 type UploadFile interface {
 	Prepare(init func())
@@ -25,6 +27,6 @@ type UploadPart interface {
 	Data() io.Reader
 }
 
-type Uploader interface {
+type Uploader1 interface {
 	Upload(file UploadFile, part UploadPart) error
 }

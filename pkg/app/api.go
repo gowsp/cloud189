@@ -14,7 +14,7 @@ type api struct {
 	conf    *invoker.Config
 }
 
-func NewApi(path string) *api {
+func New(path string) *api {
 	conf, _ := invoker.OpenConfig(path)
 	api := &api{conf: conf}
 	api.invoker = invoker.NewInvoker("https://api.cloud.189.cn", api.refresh, conf)
@@ -22,7 +22,7 @@ func NewApi(path string) *api {
 	return api
 }
 
-func NewMemApi(username, password string) *api {
+func Mem(username, password string) *api {
 	conf := &invoker.Config{User: &invoker.User{Name: username, Password: password}}
 	api := &api{conf: conf}
 	api.invoker = invoker.NewInvoker("https://api.cloud.189.cn", api.refresh, conf)

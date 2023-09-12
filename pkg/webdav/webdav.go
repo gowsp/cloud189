@@ -1,6 +1,7 @@
 package webdav
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,30 +9,17 @@ import (
 	"golang.org/x/net/webdav"
 )
 
-type WEBDAV_KEY string
+var errInvalidIfHeader = errors.New("webdav: invalid If header")
 
-const FILE_SIZE WEBDAV_KEY = "FileSize"
-
-func Serve(addr string, client pkg.App) {
-	sys := &CloudFileSystem{app: client}
-	fs := &webdav.Handler{
-		FileSystem: sys,
+func Serve(addr string, client pkg.Drive) {
+	fs := &CloudFileSystem{
+		app: client,
+	}
+	fs.handler = &webdav.Handler{
+		FileSystem: fs,
 		LockSystem: webdav.NewMemLS(),
 	}
-	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
-		switch req.Method {
-		case "COPY":
-			status, _ := sys.Copy(w, req)
-			w.WriteHeader(status)
-			if status != http.StatusNoContent {
-				w.Write([]byte(webdav.StatusText(status)))
-			}
-			return
-		}
-		req = prepare(req)
-		fs.ServeHTTP(w, req)
-	})
-	err := http.ListenAndServe(addr, nil)
+	err := http.ListenAndServe(addr, fs)
 	if err != nil {
 		fmt.Println(err)
 	}

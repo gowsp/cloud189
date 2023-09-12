@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/app"
 	"github.com/gowsp/cloud189/pkg/drive"
 	"github.com/gowsp/cloud189/pkg/invoker"
-	"github.com/gowsp/cloud189/pkg/web"
 	"github.com/spf13/cobra"
 )
 
@@ -45,17 +45,16 @@ func init() {
 	RootCmd.AddCommand(webdavCmd)
 }
 
-var singleton pkg.App
+var singleton pkg.Drive
 var once sync.Once
 
-func App() pkg.App {
+func App() pkg.Drive {
 	once.Do(func() {
-		// web.Api
 		if cfgFile == "" {
 			cfgFile = invoker.DefaultPath()
 		}
-		api := web.NewApi(cfgFile)
-		singleton = drive.NewClient(api)
+		api := app.New(cfgFile)
+		singleton = drive.New(api)
 	})
 	return singleton
 }

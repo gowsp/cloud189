@@ -36,14 +36,16 @@ func (api *api) PwdLogin(username, password string) (err error) {
 	params = url.Values{}
 	params.Set("redirectURL", resp.ToUrl)
 	addParams(&params)
-	err = api.invoker.Post("/getSessionForPC.action", params, &userSession)
+	if err = api.invoker.Post("/getSessionForPC.action", params, &userSession); err != nil {
+		return err
+	}
 	api.conf.User = user
 	api.conf.Session = &invoker.Session{Key: userSession.SessionKey, Secret: userSession.SessionSecret}
 	return api.conf.Save()
 }
 
 func addParams(params *url.Values) {
-	params.Set("version", "6.4.1.0")
+	params.Set("version", "6.5.3.0")
 	params.Set("clientType", "TELEPC")
 	params.Set("channelId", "web_cloud.189.cn")
 }

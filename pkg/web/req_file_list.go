@@ -1,17 +1,15 @@
 package web
 
 import (
-	"context"
 	"encoding/json"
 	"net/url"
-	"os"
-	"path"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/gowsp/cloud189/pkg"
 	"github.com/gowsp/cloud189/pkg/cache"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 type listResp struct {
@@ -21,7 +19,7 @@ type listResp struct {
 }
 
 func (c *api) ListFile(id string) ([]pkg.File, error) {
-	return cache.List(id, func() ([]*fileResp, error) { return c.openList(id, 1) })
+	return cache.List(id, func() ([]*file.FileInfo, error) { return c.openList(id, 1) })
 }
 
 func (c *api) portalList(id string, page int) (result []*detail, err error) {
@@ -48,14 +46,13 @@ type listFileResp struct {
 	Code json.Number `json:"res_code,omitempty"`
 	List *fileList   `json:"fileListAO,omitempty"`
 }
-
 type fileList struct {
-	Count   int         `json:"count,omitempty"`
-	Files   []*fileResp `json:"fileList,omitempty"`
-	Folders []*fileResp `json:"folderList,omitempty"`
+	Count   int              `json:"count,omitempty"`
+	Files   []*file.FileInfo `json:"fileList,omitempty"`
+	Folders []*file.FileInfo `json:"folderList,omitempty"`
 }
 
-func (l *fileList) files(id string) (data []*fileResp) {
+func (l *fileList) files(id string) (data []*file.FileInfo) {
 	if l == nil {
 		return
 	}
@@ -84,34 +81,7 @@ func (j *fileTime) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
-type fileResp struct {
-	IsFolder    bool
-	ParentId    json.Number
-	FileId      json.Number `json:"id,omitempty"`
-	FileName    string      `json:"name,omitempty"`
-	FileSize    int64       `json:"size,omitempty"`
-	MD5         string      `json:"md5,omitempty"`
-	FileModTime fileTime    `json:"lastOpTime,omitempty"`
-}
-
-func (f *fileResp) Id() string        { return f.FileId.String() }
-func (f *fileResp) PId() string       { return f.ParentId.String() }
-func (f *fileResp) Name() string      { return f.FileName }
-func (f *fileResp) Size() int64       { return f.FileSize }
-func (f *fileResp) Mode() os.FileMode { return os.ModePerm }
-func (f *fileResp) ModTime() time.Time {
-	return time.Time(f.FileModTime)
-}
-func (f *fileResp) IsDir() bool      { return f.IsFolder }
-func (f *fileResp) Sys() interface{} { return nil }
-func (f *fileResp) ContentType(ctx context.Context) (string, error) {
-	return path.Ext(f.Name()), nil
-}
-func (f *fileResp) ETag(ctx context.Context) (string, error) {
-	return strconv.FormatInt(f.ModTime().Unix(), 10), nil
-}
-
-func (c *api) openList(id string, page int) (result []*fileResp, err error) {
+func (c *api) openList(id string, page int) (result []*file.FileInfo, err error) {
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("mediaType", "0")
@@ -120,14 +90,14 @@ func (c *api) openList(id string, page int) (result []*fileResp, err error) {
 	params.Set("pageNum", strconv.Itoa(page))
 	params.Set("pageSize", "100")
 
-	var file listFileResp
-	err = c.invoker.Get("/open/file/listFiles.action", params, &file)
+	var resp listFileResp
+	err = c.invoker.Get("/open/file/listFiles.action", params, &resp)
 	if err != nil {
 		return
 	}
-	result = append(result, file.List.files(id)...)
-	if 100*page < file.List.Count {
-		var more []*fileResp
+	result = append(result, resp.List.files(id)...)
+	if 100*page < resp.List.Count {
+		var more []*file.FileInfo
 		more, err = c.openList(id, page+1)
 		result = append(result, more...)
 	}
