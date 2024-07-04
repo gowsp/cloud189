@@ -1,7 +1,6 @@
 package file
 
 import (
-	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -21,7 +20,6 @@ type LocalFile struct {
 	fileMD5   string
 	sliceMD5  string
 	sliceNum  int
-	partNum   int
 	overwrite bool
 }
 
@@ -48,11 +46,8 @@ func (f *LocalFile) Close() {
 	f.file.Close()
 }
 func (f *LocalFile) Part(num int64) pkg.UploadPart {
-	f.partNum = int(num)
 	data := io.NewSectionReader(f.file, int64(num*Slice), Slice)
-	buff := bytes.NewBuffer(nil)
-	io.Copy(buff, data)
-	return &FilePart{data: buff, num: num, name: f.partName[num]}
+	return &FilePart{data: data, num: num, name: f.partName[num]}
 }
 
 func (f *LocalFile) Overwrite() bool {
@@ -118,7 +113,7 @@ func (f *LocalFile) md5() error {
 type FilePart struct {
 	num  int64
 	name string
-	data *bytes.Buffer
+	data io.Reader
 }
 
 func (f *FilePart) Name() string {

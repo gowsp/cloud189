@@ -27,16 +27,21 @@ func (client *FS) Upload(cloud string, locals ...string) error {
 			continue
 		}
 		if file.IsFastFile(local) {
-			u := file.NewFastFile(dir.Id(), local)
-			up = append(up, u)
+			// u := file.NewFastFile(dir.Id(), local)
+			// up = append(up, u)
 			continue
 		}
-		files, _ := client.uploadLocal(dir, cloud, local)
+		files, err := client.uploadLocal(dir, local)
+		if err != nil {
+			log.Println(err)
+			continue
+		}
 		up = append(up, files...)
 	}
 	uploader := client.api.Uploader()
 	for _, v := range up {
 		err := uploader.Write(v)
+
 		if err != nil {
 			log.Println(err)
 		}
@@ -44,7 +49,7 @@ func (client *FS) Upload(cloud string, locals ...string) error {
 	return nil
 }
 
-func (client *FS) uploadLocal(parent pkg.File, cloud, local string) ([]pkg.Upload, error) {
+func (client *FS) uploadLocal(parent pkg.File, local string) ([]pkg.Upload, error) {
 	stat, err := os.Stat(local)
 	if err != nil {
 		return nil, err
