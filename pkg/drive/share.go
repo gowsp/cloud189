@@ -11,7 +11,24 @@ import (
 	"time"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 )
+
+func (f *FS) GetDownloadUrl(cloud string) (string, error) {
+	info, err := f.stat(cloud)
+	if err != nil {
+		return "", err
+	}
+	if info.IsDir() {
+		return "", file.ErrFileIsDir
+	}
+	resp, err := f.api.Download(info, 0)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	return resp.Request.URL.String(), nil
+}
 
 func (f *FS) Share(prifix, cloud string) (func(http.ResponseWriter, *http.Request), error) {
 	if _, err := f.stat(cloud); err != nil {
