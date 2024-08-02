@@ -14,7 +14,11 @@ func (client *FS) UploadFrom(file pkg.Upload) error {
 	uploader := client.api.Uploader()
 	return uploader.Write(file)
 }
-func (client *FS) Upload(cloud string, locals ...string) error {
+func (client *FS) Upload(cfg pkg.UploadConfig, cloud string, locals ...string) error {
+	err := cfg.Check()
+	if err != nil {
+		return err
+	}
 	dir, err := client.stat(cloud)
 	if len(locals) > 1 || os.IsNotExist(err) {
 		client.Mkdir(cloud[1:])
@@ -38,14 +42,19 @@ func (client *FS) Upload(cloud string, locals ...string) error {
 		}
 		up = append(up, files...)
 	}
+	task := cfg.NewTask()
 	uploader := client.api.Uploader()
 	for _, v := range up {
-		err := uploader.Write(v)
-
-		if err != nil {
-			log.Println(err)
+		if !cfg.Match(v.Name()) {
+			continue
 		}
+		task.Run(func() {
+			if err = uploader.Write(v); err != nil {
+				log.Println(err)
+			}
+		})
 	}
+	task.Close()
 	return nil
 }
 

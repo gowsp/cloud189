@@ -7,6 +7,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gowsp/cloud189/pkg"
 	"github.com/gowsp/cloud189/pkg/app"
 	"github.com/gowsp/cloud189/pkg/invoker"
 	"github.com/gowsp/cloud189/pkg/util"
@@ -54,8 +55,9 @@ func TestMakeDir(t *testing.T) {
 func TestUpload(t *testing.T) {
 	api := app.New(invoker.DefaultPath())
 	fs := New(api)
-	fs.Upload("/home", "D:/repo/go/src/github.com/gowsp/cloud189/docs/html")
-	fs.Upload("/", "D:/tmp/01.txt")
+	cfg := pkg.UploadConfig{Num: 3}
+	fs.Upload(cfg, "/home", "D:/repo/go/src/github.com/gowsp/cloud189/docs/html")
+	fs.Upload(cfg, "/", "D:/tmp/01.txt")
 	// f, _ := os.Open("drive_test.go")
 	// l := file.NewLocalFile("-11", f)
 	// api.Uploader().Write(l)
