@@ -54,7 +54,7 @@ func (a *api) signReq(url string) {
 			a.invoker.Refresh()
 			a.signReq(url)
 		default:
-			log.Printf("obtain: %s" + e.PrizeName)
+			log.Printf("obtain: %s", e.PrizeName)
 		}
 	} else {
 		log.Println(err)

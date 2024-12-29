@@ -48,8 +48,9 @@ func (client *FS) Upload(cfg pkg.UploadConfig, cloud string, locals ...string) e
 		if !cfg.Match(v.Name()) {
 			continue
 		}
+		r := v
 		task.Run(func() {
-			if err = uploader.Write(v); err != nil {
+			if err = uploader.Write(r); err != nil {
 				log.Println(err)
 			}
 		})

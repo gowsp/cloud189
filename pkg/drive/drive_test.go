@@ -56,8 +56,9 @@ func TestUpload(t *testing.T) {
 	api := app.New(invoker.DefaultPath())
 	fs := New(api)
 	cfg := pkg.UploadConfig{Num: 3}
-	fs.Upload(cfg, "/home", "D:/repo/go/src/github.com/gowsp/cloud189/docs/html")
-	fs.Upload(cfg, "/", "D:/tmp/01.txt")
+	// fs.Upload(cfg, "/home", "D:/repo/go/src/github.com/gowsp/cloud189/docs/html")
+	// fs.Upload(cfg, "/", "D:/tmp/01.txt")
+	fs.Upload(cfg, "/", "../")
 	// f, _ := os.Open("drive_test.go")
 	// l := file.NewLocalFile("-11", f)
 	// api.Uploader().Write(l)

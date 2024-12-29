@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gowsp/cloud189/pkg"
+	"github.com/gowsp/cloud189/pkg/file"
 )
 
 func (d *api) Search(parent pkg.File, fileType pkg.FileType, name string) ([]pkg.File, error) {
@@ -34,6 +35,9 @@ func (l *searchResult) fill(id string) (data []pkg.File) {
 }
 
 func (c *api) search(id, fileType, name string, page int) (result []pkg.File, err error) {
+	if file.IsSystem(id, name) {
+		return c.List(file.Root, pkg.DIR)
+	}
 	params := make(url.Values)
 	params.Set("folderId", id)
 	params.Set("filename", name)
