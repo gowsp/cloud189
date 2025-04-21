@@ -3,8 +3,6 @@ package pkg
 import (
 	"errors"
 	"io"
-	"log"
-	"path"
 	"strings"
 
 	"github.com/gowsp/cloud189/pkg/util"
@@ -51,15 +49,4 @@ func (c *UploadConfig) Check() (err error) {
 	}
 	c.Parten = strings.TrimSpace(c.Parten)
 	return nil
-}
-func (c *UploadConfig) Match(name string) bool {
-	if c.Parten == "" {
-		return true
-	}
-	val, err := path.Match(c.Parten, name)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	return val
 }
