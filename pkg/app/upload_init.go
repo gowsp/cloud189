@@ -8,7 +8,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"strconv"
@@ -23,10 +22,12 @@ import (
 
 type Upload struct {
 	session *invoker.Session
+	invoker *invoker.Invoker
 }
 
 func (client *api) Uploader() pkg.ReadWriter {
-	return &Upload{session: client.conf.Session}
+	client.invoker.Get("/keepUserSession.action", nil, "")
+	return &Upload{session: client.conf.Session, invoker: client.invoker}
 }
 func (client *Upload) Write(upload pkg.Upload) error {
 	data, err := client.init(upload)
@@ -55,45 +56,16 @@ func (client *Upload) Write(upload pkg.Upload) error {
 	return client.commit(upload, data.UploadFileId, "1")
 }
 
-func (up *Upload) create(method, u string, f url.Values) *http.Request {
-	c := time.Now().Format(time.RFC1123)
-	r := util.Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx")
-	l := up.session.Secret
-
+func (up *Upload) encrypt(f url.Values) string {
 	e := util.EncodeParam(f)
-	data := util.AesEncrypt([]byte(e), []byte(l[0:16]))
-	h := strings.ToUpper(hex.EncodeToString(data))
-
-	req, err := http.NewRequest(http.MethodGet, "https://upload.cloud.189.cn"+u+"?params="+h+"&rand=1719987550105&clientType=TELEPC&version=7.1.0.0&channelId=web_cloud.189.cn", nil)
-	if err != nil {
-		return nil
-	}
-	a := make(url.Values)
-	a.Set("SessionKey", up.session.Key)
-	a.Set("Operate", method)
-	a.Set("RequestURI", u)
-	a.Set("Date", c)
-	a.Set("params", h)
-
-	g := util.Sha1(util.EncodeParam(a), l)
-	req.Header.Set("SessionKey", up.session.Key)
-	req.Header.Set("Signature", g)
-	req.Header.Set("Date", c)
-	req.Header.Set("X-Request-ID", r)
-	return req
+	data := util.AesEncrypt([]byte(e), []byte(up.session.Secret[0:16]))
+	return hex.EncodeToString(data)
 }
 
-func (up *Upload) do(req func() *http.Request, retry int, result interface{}) error {
-	r := req()
-	resp, err := http.DefaultClient.Do(r)
+func (up *Upload) do(req *http.Request, retry int, result any) error {
+	resp, err := up.invoker.DoWithResp(req)
 	if err != nil {
 		return err
-	}
-	if os.Getenv("DEBUG") == "1" {
-		rdata, _ := httputil.DumpRequest(r, true)
-		fmt.Println(string(rdata))
-		data, _ := httputil.DumpResponse(resp, true)
-		fmt.Println(string(data))
 	}
 	if resp.StatusCode == 200 {
 		defer resp.Body.Close()
@@ -116,15 +88,17 @@ type uperror struct {
 	Msg  string `json:"msg"`
 }
 
-func (i *Upload) Get(path string, params url.Values, result interface{}) error {
-	return i.do(func() *http.Request {
-		return i.create(http.MethodGet, path, params)
-	}, 0, result)
-}
-func (i *Upload) Post(path string, params url.Values, result interface{}) error {
-	return i.do(func() *http.Request {
-		return i.create(http.MethodPost, path, params)
-	}, 0, result)
+func (i *Upload) Get(path string, params url.Values, result any) error {
+	vals := make(url.Values)
+	vals.Set("params", i.encrypt(params))
+	req, err := http.NewRequest(http.MethodGet, "https://upload.cloud.189.cn"+path+"?"+vals.Encode(), nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("decodefields", "familyId,parentFolderId,fileName,fileMd5,fileSize,sliceMd5,sliceSize,albumId,extend,lazyCheck,isLog")
+	req.Header.Set("accept", "application/json;charset=UTF-8")
+	req.Header.Set("cache-control", "no-cache")
+	return i.do(req, 0, result)
 }
 
 type uploadInfo struct {

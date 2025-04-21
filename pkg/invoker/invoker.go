@@ -47,19 +47,25 @@ func (i *Invoker) Cookie(raw, name string) string {
 	return ""
 }
 
-func (i *Invoker) Do(req *http.Request, data interface{}, retry int) error {
-	if retry == 0 {
-		return os.ErrInvalid
-	}
+func (i *Invoker) DoWithResp(req *http.Request) (*http.Response, error) {
 	if i.prepare != nil {
 		i.prepare(req)
 	}
 	resp, err := i.http.Do(req)
 	val := os.Getenv("189_MODE")
 	if val == "1" {
-		body, _ := httputil.DumpResponse(resp, true)
-		fmt.Println(string(body))
+		rdata, _ := httputil.DumpRequest(req, true)
+		fmt.Println(string(rdata))
+		data, _ := httputil.DumpResponse(resp, true)
+		fmt.Println(string(data))
 	}
+	return resp, err
+}
+func (i *Invoker) Do(req *http.Request, data any, retry int) error {
+	if retry == 0 {
+		return os.ErrInvalid
+	}
+	resp, err := i.DoWithResp(req)
 	if err != nil || resp.StatusCode == http.StatusBadRequest {
 		time.Sleep(time.Millisecond * 200)
 		err := i.Refresh()
@@ -82,7 +88,7 @@ func (i *Invoker) Send(req *http.Request) (*http.Response, error) {
 func (i *Invoker) Fetch(path string) (*http.Response, error) {
 	return i.http.Get(path)
 }
-func (i *Invoker) Get(path string, params url.Values, data interface{}) error {
+func (i *Invoker) Get(path string, params url.Values, data any) error {
 	url := i.url + path
 	if len(params) > 0 {
 		url += "?" + params.Encode()
@@ -94,7 +100,7 @@ func (i *Invoker) Get(path string, params url.Values, data interface{}) error {
 	req.Header.Set("Accept", "application/json;charset=UTF-8")
 	return i.Do(req, data, 3)
 }
-func (i *Invoker) Post(path string, params url.Values, data interface{}) error {
+func (i *Invoker) Post(path string, params url.Values, data any) error {
 	url := i.url + path
 	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(params.Encode()))
 	if err != nil {

@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gowsp/cloud189/pkg/invoker"
@@ -40,11 +41,26 @@ func (api *api) sign(req *http.Request) {
 	if session == nil {
 		return
 	}
-	date := time.Now().Format(time.RFC1123)
+	query := req.URL.Query()
+
+	now := time.Now()
+	date := now.Format(time.RFC1123)
 	data := fmt.Sprintf("SessionKey=%s&Operate=%s&RequestURI=%s&Date=%s",
 		session.Key, req.Method, req.URL.Path, date)
+	// 追加上传参数
+	if req.Host == "upload.cloud.189.cn" {
+		data += "&params=" + query.Get("params")
+	}
 	req.Header.Set("Date", date)
+	req.Header.Set("user-agent", "desktop")
 	req.Header.Set("SessionKey", session.Key)
 	req.Header.Set("Signature", util.Sha1(data, session.Secret))
 	req.Header.Set("X-Request-ID", util.Random("xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx"))
+
+	// 填充客户端参数
+	query.Set("rand", strconv.FormatInt(now.UnixMilli(), 10))
+	query.Set("clientType", "TELEPC")
+	query.Set("version", "7.1.7.0")
+	query.Set("channelId", "web_cloud.189.cn")
+	req.URL.RawQuery = query.Encode()
 }
