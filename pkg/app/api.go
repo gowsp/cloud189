@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -32,6 +33,10 @@ func Mem(username, password string) *api {
 }
 
 func (api *api) refresh() error {
+	user := api.conf.User
+	if user.Name == "" || user.Password == "" {
+		return errors.New("扫码不支持自动刷新")
+	}
 	return api.PwdLogin(api.conf.User.Name, api.conf.User.Password)
 }
 
@@ -60,7 +65,7 @@ func (api *api) sign(req *http.Request) {
 	// 填充客户端参数
 	query.Set("rand", strconv.FormatInt(now.UnixMilli(), 10))
 	query.Set("clientType", "TELEPC")
-	query.Set("version", "7.1.7.0")
+	query.Set("version", "7.1.8.0")
 	query.Set("channelId", "web_cloud.189.cn")
 	req.URL.RawQuery = query.Encode()
 }

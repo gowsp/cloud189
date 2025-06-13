@@ -31,6 +31,18 @@ var loginCmd = &cobra.Command{
 	},
 }
 
+var qrLoginCmd = &cobra.Command{
+	Use:   "qrlogin",
+	Short: "qrlogin cloud189",
+	Run: func(cmd *cobra.Command, args []string) {
+	if err := App().QrLogin(); err != nil {
+		fmt.Printf("\n%s\n", err)
+		return
+	}
+	fmt.Println("login success")
+	},
+}
+
 func loginFunc(username, password string) {
 	if err := App().Login(username, password); err != nil {
 		fmt.Printf("\n%s\n", err)

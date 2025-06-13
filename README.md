@@ -9,6 +9,7 @@
 - 显示帮助: `cloud189 -h`
 - 显示版本: `cloud189 version`
 - 用户登录
+  - `cloud189 qrlogin` 浏览器打开控制台中二维码链接扫码登录
   - `cloud189 login` 控制台中输入用户名密码登陆
   - `cloud189 login -i {用户名} {密码}` 用户名密码登录
 - 退出登录

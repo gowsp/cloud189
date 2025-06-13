@@ -16,6 +16,9 @@ func init() {
 func TestLogin(t *testing.T) {
 	New(invoker.DefaultPath()).PwdLogin("xxxxxxx", "xxxxxxxxxxx")
 }
+func TestQrLogin(t *testing.T) {
+	New(invoker.DefaultPath()).QrLogin()
+}
 func TestSpace(t *testing.T) {
 	space, _ := New(invoker.DefaultPath()).Space()
 	fmt.Println(space.Available, space.Capacity)

@@ -11,6 +11,7 @@ type Drive interface {
 	Space() (Space, error)
 	Mkdir(name string) error
 	Delete(name ...string) error
+	QrLogin() error
 	Login(username, password string) error
 	Copy(target string, source ...string) error
 	Move(target string, source ...string) error
@@ -47,6 +48,8 @@ type Upload interface {
 }
 
 type DriveApi interface {
+	QrLogin() error
+
 	PwdLogin(username, password string) error
 
 	// get upload

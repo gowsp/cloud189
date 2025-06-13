@@ -32,6 +32,7 @@ func init() {
 	RootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.config/cloud189/config.json)")
 
 	RootCmd.AddCommand(loginCmd)
+	RootCmd.AddCommand(qrLoginCmd)
 	RootCmd.AddCommand(logoutCmd)
 	RootCmd.AddCommand(signCmd)
 	RootCmd.AddCommand(upCmd)

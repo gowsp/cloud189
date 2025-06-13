@@ -23,6 +23,9 @@ type FS struct {
 func (f *FS) Login(username, password string) error {
 	return f.api.PwdLogin(username, password)
 }
+func (f *FS) QrLogin() error {
+	return f.api.QrLogin()
+}
 func (f *FS) Space() (pkg.Space, error) {
 	return f.api.Space()
 }

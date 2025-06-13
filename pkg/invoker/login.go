@@ -4,8 +4,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 
@@ -69,6 +72,10 @@ func (ctx *content) getAppConf() *appConf {
 	resp, err := ctx.http.Do(req)
 	if err != nil {
 		return nil
+	}
+	if os.Getenv("189_MODE") == "1" {
+		data, _ := httputil.DumpResponse(resp, true)
+		fmt.Println(string(data))
 	}
 	var appConf appConf
 	json.NewDecoder(resp.Body).Decode(&appConf)
