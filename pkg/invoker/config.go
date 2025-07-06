@@ -27,8 +27,34 @@ func (r *RsaConfig) Encrypt(data string) []byte {
 }
 
 type Session struct {
-	Key    string `json:"key,omitempty"`
-	Secret string `json:"secret,omitempty"`
+	LoginName    string `json:"loginName,omitempty"`
+	Key          string `json:"sessionKey,omitempty"`
+	Secret       string `json:"sessionSecret,omitempty"`
+	KeepAlive    int    `json:"keepAlive,omitempty"`
+	FileDiffSpan int    `json:"getFileDiffSpan,omitempty"`
+	UserInfoSpan int    `json:"getUserInfoSpan,omitempty"`
+	FamilyKey    string `json:"familySessionKey,omitempty"`
+	FamilySecret string `json:"familySessionSecret,omitempty"`
+	AccessToken  string `json:"accessToken,omitempty"`
+	RefreshToken string `json:"refreshToken,omitempty"`
+}
+
+func (s *Session) Merge(new Session) {
+	s.Key = new.Key
+	s.Secret = new.Secret
+	s.LoginName = new.LoginName
+	s.KeepAlive = new.KeepAlive
+	s.FileDiffSpan = new.FileDiffSpan
+	s.UserInfoSpan = new.UserInfoSpan
+	s.FamilyKey = new.FamilyKey
+	s.FamilySecret = new.FamilySecret
+}
+
+func (s *Session) Login() bool {
+	return s != nil && s.AccessToken != ""
+}
+func (s *Session) Empty() bool {
+	return s == nil || s.Key == "" || s.Secret == ""
 }
 
 type Config struct {

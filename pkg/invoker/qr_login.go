@@ -19,41 +19,6 @@ type QrCodeReq struct {
 	Encodeuuid string `json:"encodeuuid,omitempty"`
 }
 
-func (c *content) qrLogin() {
-	config := c.getAppConf()
-
-	req, _ := http.NewRequest(http.MethodGet, "https://open.e.189.cn/api/logbox/oauth2/getUUID.do", nil)
-	param := req.URL.Query()
-	param.Set("appId", c.AppKey)
-	req.URL.RawQuery = param.Encode()
-	resp, _ := http.DefaultClient.Do(req)
-	var ctx QrCodeReq
-	ctx.content = c
-	json.NewDecoder(resp.Body).Decode(&ctx)
-	params := make(url.Values)
-	url, _ := url.PathUnescape(ctx.Encodeuuid)
-	params.Set("REQID", c.ReqId)
-	params.Set("uuid", url)
-	log.Printf("please open url in your browser to login:\nhttps://open.e.189.cn/api/logbox/oauth2/image.do?%s\n\n", params.Encode())
-	t := time.NewTicker(3 * time.Second)
-	for {
-		status := ctx.query(config)
-		switch status.Status {
-		case -106:
-			log.Println("not scanned")
-		case -11002:
-			log.Println("unconfirmed")
-		case 0:
-			t.Stop()
-			log.Println("logged")
-		default:
-			t.Stop()
-			log.Fatalln("unknown status")
-		}
-		<-t.C
-	}
-}
-
 type qrCodeState struct {
 	RedirectUrl string `json:"redirectUrl,omitempty"`
 	Status      int32  `json:"status,omitempty"`

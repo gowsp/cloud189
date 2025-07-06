@@ -22,7 +22,6 @@ type result struct {
 
 func (client *api) Sign() error {
 	params := url.Values{}
-	addParams(&params)
 	var r result
 	err := client.invoker.Get("/mkt/userSign.action", params, &r)
 	if err == nil {
