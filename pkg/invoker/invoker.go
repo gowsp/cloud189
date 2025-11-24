@@ -66,9 +66,35 @@ func (i *Invoker) Do(req *http.Request, data any, retry int) error {
 		return os.ErrInvalid
 	}
 	resp, err := i.DoWithResp(req)
-	if err != nil || resp.StatusCode == http.StatusBadRequest {
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	switch resp.StatusCode {
+	case http.StatusOK:
+		err := json.NewDecoder(resp.Body).Decode(data)
+		if err != nil {
+			return err
+		}
+		if rsp, ok := data.(OkRsp); ok && !rsp.IsSuccess() {
+			return rsp
+		}
+		return nil
+
+	case http.StatusBadRequest:
+		rsp := new(strCodeRsp)
+		err := json.NewDecoder(resp.Body).Decode(rsp)
+		if err != nil {
+			return err
+		}
+		if rsp.isBusinessErr() {
+			return rsp
+		}
+		fallthrough
+	case http.StatusForbidden:
 		time.Sleep(time.Millisecond * 200)
-		err := i.Refresh()
+		err = i.Refresh()
 		if err != nil {
 			return err
 		}
@@ -77,9 +103,9 @@ func (i *Invoker) Do(req *http.Request, data any, retry int) error {
 			req.Body, _ = req.GetBody()
 		}
 		return i.Do(req, data, retry-1)
+	default:
+		return fmt.Errorf("status code: %d", resp.StatusCode)
 	}
-	defer resp.Body.Close()
-	return json.NewDecoder(resp.Body).Decode(data)
 }
 
 func (i *Invoker) Send(req *http.Request) (*http.Response, error) {
