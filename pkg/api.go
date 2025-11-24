@@ -23,12 +23,20 @@ type FileExt struct {
 	DownloadUrl string
 }
 
+type Usage interface {
+	FileCount() uint64
+	FileSize() uint64
+	FolderCount() uint64
+}
+
 type Api interface {
 	Sign() error
 
 	Space() (Space, error)
 
 	Login(name, password string) error
+
+	Stat(path string) (File, error)
 
 	Find(id, name string) (File, error)
 

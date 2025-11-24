@@ -85,3 +85,14 @@ func (f *FS) Delete(name ...string) error {
 	invalid(files...)
 	return err
 }
+
+func (f *FS) Usage(name string) (pkg.Usage, error) {
+	fileInfo, err := f.stat(name)
+	if err != nil {
+		return nil, err
+	}
+	if fileInfo.IsDir() {
+		return f.api.DirUsage(fileInfo)
+	}
+	return file.NewFileUsage(fileInfo), nil
+}

@@ -8,6 +8,7 @@ import (
 type Drive interface {
 	fs.StatFS
 	fs.ReadDirFS
+	Usage(name string) (Usage, error)
 	Space() (Space, error)
 	Mkdir(name string) error
 	Delete(name ...string) error
@@ -63,6 +64,12 @@ type DriveApi interface {
 
 	// get space info
 	Space() (Space, error)
+
+	// get file info
+	Stat(path string) (File, error)
+
+	// get folder usage
+	DirUsage(file File) (Usage, error)
 
 	// searce file by type
 	Search(parent File, fileType FileType, name string) ([]File, error)

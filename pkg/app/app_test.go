@@ -65,3 +65,14 @@ func TestMove(t *testing.T) {
 	f, _ := api.Mkdir(file.Root, "/demo/1/2/3")
 	api.Move(file.Root, f)
 }
+func TestGetFolder(t *testing.T) {
+	api := New(invoker.DefaultPath())
+	f, _ := api.Stat("/demo/1/2/3")
+	if f.IsDir() {
+		api.DirUsage(f)
+	}
+}
+func TestGetFile(t *testing.T) {
+	api := New(invoker.DefaultPath())
+	api.Stat("/我的图片")
+}
