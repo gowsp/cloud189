@@ -82,17 +82,12 @@ func (i *Invoker) Do(req *http.Request, data any, retry int) error {
 		}
 		return nil
 
-	case http.StatusBadRequest:
+	case http.StatusBadRequest, http.StatusForbidden:
 		rsp := new(strCodeRsp)
 		err := json.NewDecoder(resp.Body).Decode(rsp)
-		if err != nil {
-			return err
-		}
-		if rsp.isBusinessErr() {
+		if err == nil && rsp.isBusinessErr() {
 			return rsp
 		}
-		fallthrough
-	case http.StatusForbidden:
 		time.Sleep(time.Millisecond * 200)
 		err = i.Refresh()
 		if err != nil {

@@ -5,6 +5,7 @@ import "fmt"
 // 错误码
 const (
 	ErrFileNotFound           = "FileNotFound"           //文件不存在
+	ErrInvalidArgument        = "InvalidArgument"        //参数错误
 	ErrUserDayFlowOverLimited = "UserDayFlowOverLimited" //用户当日流量已用完
 )
 
@@ -43,7 +44,7 @@ type BadRsp interface {
 
 type strCodeRsp struct {
 	StrCode    string `json:"code"`
-	StrMessage string `json:"message"`
+	StrMessage string `json:"msg"`
 	ResCode    string `json:"res_code"`
 	ResMessage string `json:"res_message"`
 }
