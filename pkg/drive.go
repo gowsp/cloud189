@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"context"
 	"io/fs"
 	"net/http"
 )
@@ -91,4 +92,14 @@ type DriveApi interface {
 
 	// delete file
 	Delete(file ...File) error
+
+	// share info
+	GetShareInfo(shareCode string) (result File, accessCode string, shareMode int, err error)
+
+	// list share dir
+	ListShareDir(fileId, shareId, accessCode string, shareMode int, isFolder, recursive bool) ([]File, error)
+
+	// share save
+	ShareSave(targetFolderId, shareId string, files ...File) (taskId string, err error)
+	ShareSaveSync(ctx context.Context, dealWay int, targetFolderId, shareId string, files ...File) (sucCount int, err error)
 }
