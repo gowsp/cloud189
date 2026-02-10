@@ -22,6 +22,7 @@ type Drive interface {
 	Download(local string, cloud ...string) error
 	Share(prifix, cloud string) (func(http.ResponseWriter, *http.Request), error)
 	GetDownloadUrl(cloud string) (string, error)
+	SaveShare(shareURL string, target string) error
 }
 
 type FileType uint16

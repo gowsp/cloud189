@@ -46,6 +46,7 @@ func init() {
 	RootCmd.AddCommand(duCmd)
 	RootCmd.AddCommand(webdavCmd)
 	RootCmd.AddCommand(shareCmd)
+	RootCmd.AddCommand(saveCmd)
 }
 
 var singleton pkg.Drive
