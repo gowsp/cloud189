@@ -2,7 +2,6 @@ package drive
 
 import (
 	"io/fs"
-	"strings"
 
 	"github.com/gowsp/cloud189/pkg"
 )
@@ -21,20 +20,24 @@ func (f *FS) resolve(path ...string) (files []pkg.File) {
 	return
 }
 func (f *FS) stat(name string) (pkg.File, error) {
-	var err error
-	var file pkg.File = f.root
-	path := strings.Split(name, "/")
-	size := len(path) - 1
-	for i := 1; i < size; i++ {
-		file, err = f.search(file, pkg.DIR, path[i])
-		if err != nil {
-			return nil, err
-		}
+	if name == "/" {
+		return f.root, nil
 	}
-	if path[size] == "" {
-		return file, nil
-	}
-	return f.search(file, pkg.ALL, path[size])
+	return f.api.Stat(name)
+	// var err error
+	// var file pkg.File = f.root
+	// path := strings.Split(name, "/")
+	// size := len(path) - 1
+	// for i := 1; i < size; i++ {
+	// 	file, err = f.search(file, pkg.DIR, path[i])
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// }
+	// if path[size] == "" {
+	// 	return file, nil
+	// }
+	// return f.search(file, pkg.ALL, path[size])
 }
 func (f *FS) search(parent pkg.File, fileType pkg.FileType, name string) (pkg.File, error) {
 	return load(parent.Id()).search(name, func() (pkg.File, error) {
@@ -56,7 +59,11 @@ func (f *FS) ReadDir(name string) ([]fs.DirEntry, error) {
 	if err != nil {
 		return nil, err
 	}
-	info, err := load(dir.Id()).list(func() ([]pkg.File, error) {
+	node := load(dir.Id())
+	if node == nil {
+		node = newNode(dir)
+	}
+	info, err := node.list(func() ([]pkg.File, error) {
 		return f.api.List(dir, pkg.ALL)
 	})
 	if err != nil {

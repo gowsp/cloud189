@@ -43,6 +43,7 @@ func init() {
 	RootCmd.AddCommand(mvCmd)
 	RootCmd.AddCommand(cpCmd)
 	RootCmd.AddCommand(dfCmd)
+	RootCmd.AddCommand(duCmd)
 	RootCmd.AddCommand(webdavCmd)
 	RootCmd.AddCommand(shareCmd)
 }

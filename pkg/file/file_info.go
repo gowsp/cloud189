@@ -10,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gowsp/cloud189/pkg"
 )
 
 const (
@@ -92,3 +94,28 @@ func (f *FileInfo) ETag(ctx context.Context) (string, error) {
 	return strconv.FormatInt(f.ModTime().Unix(), 10), nil
 }
 func (f *FileInfo) Info() (fs.FileInfo, error) { return f, nil }
+
+// FileUsage is a Usage interface implementation for files
+type FileUsage struct {
+	file pkg.File
+}
+
+func (f *FileUsage) FileCount() uint64 {
+	// A single file counts as 1 file
+	return 1
+}
+
+func (f *FileUsage) FileSize() uint64 {
+	// Return the size of the file
+	return uint64(f.file.Size())
+}
+
+func (f *FileUsage) FolderCount() uint64 {
+	// A file doesn't contain folders
+	return 0
+}
+
+// NewFileUsage creates a new Usage implementation for a file
+func NewFileUsage(file pkg.File) pkg.Usage {
+	return &FileUsage{file: file}
+}

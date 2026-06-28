@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -12,7 +11,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gowsp/cloud189/pkg"
 	"github.com/gowsp/cloud189/pkg/file"
@@ -62,32 +60,6 @@ func (up *Upload) encrypt(f url.Values) string {
 	return hex.EncodeToString(data)
 }
 
-func (up *Upload) do(req *http.Request, retry int, result any) error {
-	resp, err := up.invoker.DoWithResp(req)
-	if err != nil {
-		return err
-	}
-	if resp.StatusCode == 200 {
-		defer resp.Body.Close()
-		return json.NewDecoder(resp.Body).Decode(&result)
-	}
-	var e uperror
-	json.NewDecoder(resp.Body).Decode(&e)
-	if e.Code == "UserDayFlowOverLimited" {
-		return errors.New("上传超过当日流量限制")
-	}
-	if retry > 5 {
-		return err
-	}
-	time.Sleep(time.Second)
-	return up.do(req, retry+1, result)
-}
-
-type uperror struct {
-	Code string `json:"code"`
-	Msg  string `json:"msg"`
-}
-
 func (i *Upload) Get(path string, params url.Values, result any) error {
 	vals := make(url.Values)
 	vals.Set("params", i.encrypt(params))
@@ -98,7 +70,7 @@ func (i *Upload) Get(path string, params url.Values, result any) error {
 	req.Header.Set("decodefields", "familyId,parentFolderId,fileName,fileMd5,fileSize,sliceMd5,sliceSize,albumId,extend,lazyCheck,isLog")
 	req.Header.Set("accept", "application/json;charset=UTF-8")
 	req.Header.Set("cache-control", "no-cache")
-	return i.do(req, 0, result)
+	return i.invoker.Do(req, result, 5)
 }
 
 type uploadInfo struct {
