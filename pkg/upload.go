@@ -38,6 +38,7 @@ type Uploader1 interface {
 type UploadConfig struct {
 	Num    uint32
 	Parten string
+	Policy string
 }
 
 func (c *UploadConfig) NewTask() *util.TaskPool {
@@ -48,5 +49,11 @@ func (c *UploadConfig) Check() (err error) {
 		return errors.New("error number of parallels")
 	}
 	c.Parten = strings.TrimSpace(c.Parten)
+	c.Policy = strings.TrimSpace(c.Policy)
+	switch c.Policy {
+	case "", "skip", "overwrite":
+	default:
+		return errors.New("policy must be skip or overwrite")
+	}
 	return nil
 }

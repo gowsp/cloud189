@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path"
+	"path/filepath"
 
 	"github.com/gowsp/cloud189/pkg"
 )
@@ -25,6 +26,44 @@ func (f *FS) Download(local string, cloud ...string) error {
 		}
 	}
 	return nil
+}
+
+func (f *FS) DownloadTo(localPath, remoteFilePath string) (os.FileInfo, error) {
+	source, err := f.stat(remoteFilePath)
+	if err != nil {
+		return nil, err
+	}
+	if source.IsDir() {
+		return nil, errors.New("not support download dir")
+	}
+	if err = os.MkdirAll(filepath.Dir(localPath), 0755); err != nil {
+		return nil, err
+	}
+	d, err := os.OpenFile(localPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return nil, err
+	}
+	defer d.Close()
+	resp, err := f.api.Download(source, 0)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 300 {
+		resp.Body.Close()
+		return nil, errors.New("error download status code " + resp.Status)
+	}
+	defer resp.Body.Close()
+	if _, err = io.Copy(d, resp.Body); err != nil {
+		return nil, err
+	}
+	info, err := d.Stat()
+	if err != nil {
+		return nil, err
+	}
+	if info.Size() != source.Size() {
+		return nil, fmt.Errorf("download size mismatch: got %d, want %d", info.Size(), source.Size())
+	}
+	return source, nil
 }
 
 func (f *FS) download(info os.FileInfo, local string, source pkg.File) error {

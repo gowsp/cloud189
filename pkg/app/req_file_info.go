@@ -64,9 +64,19 @@ func (f *FileDetail) PId() string        { return fmt.Sprintf("%d", f.ParentID) 
 func (f *FileDetail) Name() string       { return f.FileName }
 func (f *FileDetail) Size() int64        { return f.FileSize }
 func (f *FileDetail) Mode() os.FileMode  { return os.ModeSymlink }
-func (f *FileDetail) ModTime() time.Time { return time.Unix(f.LastOpTime, 0) }
+func (f *FileDetail) ModTime() time.Time { return unixTime(f.LastOpTime) }
 func (f *FileDetail) IsDir() bool        { return f.Md5 == "" }
 func (f *FileDetail) Sys() any           { return f.ParentFolderListAO.ParentFolderList }
+
+func unixTime(value int64) time.Time {
+	if value <= 0 {
+		return time.Time{}
+	}
+	if value > 1_000_000_000_000 {
+		return time.UnixMilli(value)
+	}
+	return time.Unix(value, 0)
+}
 
 type FolderInfo struct {
 	CreateDate         string `json:"createDate"`

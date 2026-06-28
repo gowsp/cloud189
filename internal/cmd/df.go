@@ -10,11 +10,17 @@ import (
 var dfCmd = &cobra.Command{
 	Use:   "df",
 	Short: "show information about the space used",
-	Run: func(cmd *cobra.Command, args []string) {
+	RunE: func(cmd *cobra.Command, args []string) error {
 		space, err := App().Space()
 		if err != nil {
-			fmt.Println(err)
-			return
+			return err
+		}
+		if jsonOutput {
+			return writeJSON(JSONSpace{
+				OK:        true,
+				Capacity:  space.Capacity,
+				Available: space.Available,
+			})
 		}
 		capacity := space.Capacity
 		available := space.Available
@@ -26,6 +32,7 @@ var dfCmd = &cobra.Command{
 			file.ReadableSize(available),
 			float64(used)*100/float64(capacity),
 		)
+		return nil
 
 	},
 }

@@ -80,7 +80,9 @@ func (f *FS) Delete(name ...string) error {
 	}
 	err := f.api.Delete(files...)
 	for _, file := range files {
-		load(file.PId()).delete(file)
+		if node := load(file.PId()); node != nil {
+			node.delete(file)
+		}
 	}
 	invalid(files...)
 	return err

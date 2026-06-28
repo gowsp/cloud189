@@ -16,6 +16,7 @@ type LocalFile struct {
 	parentId  string
 	file      *os.File
 	info      os.FileInfo
+	name      string
 	partName  []string
 	fileMD5   string
 	sliceMD5  string
@@ -24,23 +25,34 @@ type LocalFile struct {
 }
 
 func NewLocalFile(parentId string, path string) pkg.Upload {
-	source, err := os.Open(path)
+	upload, err := NewLocalFileWithOptions(parentId, path, "", false)
 	if err != nil {
 		return nil
 	}
+	return upload
+}
+
+func NewLocalFileWithOptions(parentId, localPath, remoteName string, overwrite bool) (pkg.Upload, error) {
+	source, err := os.Open(localPath)
+	if err != nil {
+		return nil, err
+	}
 	info, err := source.Stat()
 	if err != nil {
-		return nil
+		source.Close()
+		return nil, err
 	}
 	size := info.Size()
 	sliceNum := int(math.Ceil(float64(size) / float64(Slice)))
 	return &LocalFile{
-		parentId: parentId,
-		info:     info,
-		file:     source,
-		sliceNum: sliceNum,
-		partName: make([]string, sliceNum),
-	}
+		parentId:  parentId,
+		info:      info,
+		name:      remoteName,
+		file:      source,
+		sliceNum:  sliceNum,
+		partName:  make([]string, sliceNum),
+		overwrite: overwrite,
+	}, nil
 }
 func (f *LocalFile) Close() {
 	f.file.Close()
@@ -57,6 +69,9 @@ func (f *LocalFile) ParentId() string {
 	return f.parentId
 }
 func (f *LocalFile) Name() string {
+	if f.name != "" {
+		return f.name
+	}
 	return f.info.Name()
 }
 func (f *LocalFile) Size() int64 {

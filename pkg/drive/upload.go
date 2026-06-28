@@ -1,9 +1,12 @@
 package drive
 
 import (
+	"errors"
+	"fmt"
 	"io/fs"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/gowsp/cloud189/pkg"
@@ -54,6 +57,83 @@ func (client *FS) Upload(cfg pkg.UploadConfig, cloud string, locals ...string) e
 	}
 	task.Close()
 	return nil
+}
+
+func (client *FS) UploadFile(cfg pkg.UploadConfig, localPath, remoteFilePath string) (fs.FileInfo, error) {
+	if err := cfg.Check(); err != nil {
+		return nil, err
+	}
+	if cfg.Policy == "" {
+		cfg.Policy = "skip"
+	}
+	localInfo, err := os.Stat(localPath)
+	if err != nil {
+		return nil, err
+	}
+	if localInfo.IsDir() {
+		return nil, errors.New("input must be a file")
+	}
+	remoteFilePath = path.Clean(remoteFilePath)
+	if !path.IsAbs(remoteFilePath) {
+		return nil, errors.New("remote path must start with /")
+	}
+	existing, err := client.stat(remoteFilePath)
+	if err == nil {
+		if existing.IsDir() {
+			return nil, errors.New("remote path is a directory")
+		}
+		if cfg.Policy == "skip" {
+			if existing.Size() == localInfo.Size() {
+				return existing, nil
+			}
+			return nil, fmt.Errorf("remote file exists with different size: got %d, want %d", existing.Size(), localInfo.Size())
+		}
+	} else if !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	parentPath, remoteName := path.Split(remoteFilePath)
+	if remoteName == "" {
+		return nil, errors.New("remote path must include a file name")
+	}
+	parent, err := client.ensureDir(parentPath)
+	if err != nil {
+		return nil, err
+	}
+	upload, err := file.NewLocalFileWithOptions(parent.Id(), localPath, remoteName, cfg.Policy == "overwrite")
+	if err != nil {
+		return nil, err
+	}
+	if closer, ok := upload.(interface{ Close() }); ok {
+		defer closer.Close()
+	}
+	if err = client.api.Uploader().Write(upload); err != nil {
+		return nil, err
+	}
+	if node := load(parent.Id()); node != nil {
+		node.invalid()
+	}
+	return client.stat(remoteFilePath)
+}
+
+func (client *FS) ensureDir(name string) (pkg.File, error) {
+	name = path.Clean(name)
+	if name == "." || name == "/" {
+		return client.root, nil
+	}
+	dir, err := client.stat(name)
+	if err == nil {
+		if !dir.IsDir() {
+			return nil, errors.New("parent path is not a directory")
+		}
+		return dir, nil
+	}
+	if !errors.Is(err, fs.ErrNotExist) {
+		return nil, err
+	}
+	if _, err = client.api.Mkdir(file.Root, name[1:]); err != nil {
+		return nil, err
+	}
+	return client.stat(name)
 }
 
 func (client *FS) uploadLocal(parent pkg.File, local string, parten string) ([]pkg.Upload, error) {

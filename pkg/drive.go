@@ -17,8 +17,10 @@ type Drive interface {
 	Copy(target string, source ...string) error
 	Move(target string, source ...string) error
 	Upload(config UploadConfig, cloud string, locals ...string) error
+	UploadFile(config UploadConfig, localPath, remoteFilePath string) (fs.FileInfo, error)
 	UploadFrom(file Upload) error
 	Download(local string, cloud ...string) error
+	DownloadTo(localPath, remoteFilePath string) (fs.FileInfo, error)
 	Share(prifix, cloud string) (func(http.ResponseWriter, *http.Request), error)
 	GetDownloadUrl(cloud string) (string, error)
 }
