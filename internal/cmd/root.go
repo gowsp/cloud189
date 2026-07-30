@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"sync"
 
@@ -15,8 +16,10 @@ var (
 	cfgFile    string
 	jsonOutput bool
 	RootCmd    = &cobra.Command{
-		Use:  "cloud189",
-		Long: "cloud189 enables users to manage cloud files through the command line. For more information, please visit https://github.com/gowsp/cloud189",
+		Use:           "cloud189",
+		Long:          "cloud189 enables users to manage cloud files through the command line. For more information, please visit https://github.com/gowsp/cloud189",
+		SilenceUsage:  true,
+		SilenceErrors: true,
 	}
 )
 
@@ -25,6 +28,11 @@ func AddCommand(cmds ...*cobra.Command) {
 }
 func Execute() {
 	if err := RootCmd.Execute(); err != nil {
+		if jsonOutput {
+			_ = writeJSONError(err)
+		} else {
+			fmt.Fprintln(os.Stderr, err)
+		}
 		os.Exit(1)
 	}
 }

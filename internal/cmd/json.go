@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"io"
 	"io/fs"
 	"os"
 	"path"
@@ -26,6 +27,11 @@ type JSONSpace struct {
 	OK        bool   `json:"ok"`
 	Capacity  uint64 `json:"capacity"`
 	Available uint64 `json:"available"`
+}
+
+type JSONError struct {
+	OK    bool   `json:"ok"`
+	Error string `json:"error"`
 }
 
 func fileToJSONEntry(cloudPath string, info os.FileInfo) JSONFileEntry {
@@ -58,7 +64,18 @@ func fileToJSONEntryWithBase(cloudPath, basePath string, info os.FileInfo) JSONF
 }
 
 func writeJSON(v any) error {
-	enc := json.NewEncoder(os.Stdout)
+	return writeJSONTo(os.Stdout, v)
+}
+
+func writeJSONError(err error) error {
+	if err == nil {
+		return nil
+	}
+	return writeJSONTo(os.Stderr, JSONError{OK: false, Error: err.Error()})
+}
+
+func writeJSONTo(w io.Writer, v any) error {
+	enc := json.NewEncoder(w)
 	enc.SetEscapeHTML(false)
 	return enc.Encode(v)
 }
