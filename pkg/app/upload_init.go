@@ -35,21 +35,17 @@ func (client *Upload) Write(upload pkg.Upload) error {
 	if data.IsExists() {
 		return client.commit(upload, data.UploadFileId, "0")
 	}
-	count := upload.SliceNum()
-	parts := make([]pkg.UploadPart, count)
-	names := make([]string, count)
-	for i := 0; i < count; i++ {
+	// Keep the encrypted GET target bounded for files with many parts.
+	for i := 0; i < upload.SliceNum(); i++ {
 		part := upload.Part(int64(i))
-		parts[i] = part
-		names[i] = fmt.Sprintf("%d-%s", i+1, part.Name())
-	}
-	rsp, err := client.getUploadUrl(data.UploadFileId, names)
-	if err != nil {
-		return err
-	}
-	err = rsp.upload(upload, parts)
-	if err != nil {
-		return err
+		partInfo := fmt.Sprintf("%d-%s", i+1, part.Name())
+		rsp, err := client.getUploadUrl(data.UploadFileId, partInfo)
+		if err != nil {
+			return err
+		}
+		if err = rsp.upload(upload, []pkg.UploadPart{part}); err != nil {
+			return err
+		}
 	}
 	return client.commit(upload, data.UploadFileId, "1")
 }
@@ -158,9 +154,9 @@ func (rsp *uploadUrlResp) upload(info pkg.Upload, parts []pkg.UploadPart) error 
 	return nil
 }
 
-func (client *Upload) getUploadUrl(fileId string, names []string) (*uploadUrlResp, error) {
+func (client *Upload) getUploadUrl(fileId, partInfo string) (*uploadUrlResp, error) {
 	p := make(url.Values)
-	p.Set("partInfo", strings.Join(names, ","))
+	p.Set("partInfo", partInfo)
 	p.Set("uploadFileId", fileId)
 	urlResp := new(uploadUrlResp)
 	return urlResp, client.Get("/person/getMultiUploadUrls", p, urlResp)
