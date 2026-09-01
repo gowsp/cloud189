@@ -34,6 +34,9 @@
 - 文件复制: `cloud189 cp {云盘路径...} {目标路径}`
 - WebDAV（待优化）: `cloud189 webdav :{端口}` 启动 webdav服务, 上传不支持10M以上的文件秒传
 - 文件共享: `cloud189 share :{端口} {云盘路径}` 指定http端口对外提供文件直链分享 
+- 分享保存: `cloud189 save {分享链接} {云盘路径}` 将天翼云盘分享链接中的文件保存到个人云盘，例
+  - 无访问码 `cloud189 save https://cloud.189.cn/t/reiQruJJnyEv /我的资源`
+  - 有访问码 `cloud189 save "https://cloud.189.cn/t/reiQruJJnyEv（访问码：v5oy）" /我的资源`
 - cli终端模式：`cloud189` 无参启动终端模式，`Ctrl + C`退出，该模式下无需输入`cloud189`即可支持以上所有命令，支持`Tab键`参数补全，并新增目录命令
   - `cd {云盘路径}` 进入指定目录
   - `pwd` 查看当前目录
